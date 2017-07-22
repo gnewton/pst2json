@@ -12,7 +12,7 @@ public class Pst2json {
         new Pst2json(args[0]);
     }
 
-    public Pst2json(String filename) {
+    public  Pst2json(String filename) {
         try {
             PSTFile pstFile = new PSTFile(filename);
             System.out.println(pstFile.getMessageStore().getDisplayName());
@@ -21,7 +21,9 @@ public class Pst2json {
 	    gen.useDefaultPrettyPrinter();
 	    gen.writeStartObject();
 
-            processFolder(pstFile.getRootFolder(), gen);
+	    Stack<String> foldersPath = new Stack<String>();
+
+            processFolder(pstFile.getRootFolder(), gen, foldersPath);
 	    gen.writeEndObject();
 	    gen.close();
         } catch (Exception err) {
@@ -29,53 +31,50 @@ public class Pst2json {
         }
     }
 
-    int depth = -1;
-    public void processFolder(PSTFolder folder, JsonGenerator gen)
+    int depth = 0;
+    public final void processFolder(PSTFolder folder, JsonGenerator gen, Stack<String>foldersPath)
             throws PSTException, java.io.IOException
     {
-        depth++;
-        // the root folder doesn't have a display name
-        if (depth > 0) {
-            //printDepth();
-            //System.out.println(folder.getDisplayName());
-        }
 
+	String folderName = folder.getDisplayName();
+	if (folderName != null && folderName.length() >0){
+	    foldersPath.push(folder.getDisplayName());
+	    ++depth;
+	}
+	    
         // go through the folders...
         if (folder.hasSubfolders()) {
             Vector<PSTFolder> childFolders = folder.getSubFolders();
             for (PSTFolder childFolder : childFolders) {
-                processFolder(childFolder, gen);
+                processFolder(childFolder, gen, foldersPath);
             }
         }
 
         // and now the emails for this folder
         if (folder.getContentCount() > 0) {
-            depth++;
+	    
             PSTMessage email = (PSTMessage)folder.getNextChild();
             while (email != null) {
                 //printDepth();
                 //System.out.println("Email: "+email.getSubject() + "|| " + email.getMessageDeliveryTime());
 		try{
-		    print(email, gen);
+		    print(email, gen, foldersPath, depth);
 		}catch(PSTException  e){
 		    throw new IOException();
 		}
                 email = (PSTMessage)folder.getNextChild();
             }
-            depth--;
         }
-        depth--;
-    }
 
-    public void printDepth() {
-        for (int x = 0; x < depth-1; x++) {
-            System.out.print(" | ");
-        }
-        System.out.print(" |- ");
+	if (folderName != null && folderName.length() >0){
+	    --depth;
+	    foldersPath.pop();
+	}
     }
+    final SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
-    public void print(PSTMessage email, JsonGenerator gen) throws PSTException {
-	SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+    public final void print(PSTMessage email, JsonGenerator gen, Stack<String> foldersPath, int depth) throws PSTException {
+
 	Date rec = email.getMessageDeliveryTime();
 	String receivedTime="";
 	if (rec != null){
@@ -84,14 +83,30 @@ public class Pst2json {
 	try{
 
 	    gen.writeObjectFieldStart("message");
-	    gen.writeStringField("subject", email.getSubject());
-	    gen.writeStringField("FROM", email.getSentRepresentingEmailAddress());
-	    gen.writeStringField("received", receivedTime);
-	    gen.writeStringField("from_name", email.getSenderName());
-	    gen.writeStringField("from", email.getSenderEmailAddress());
 
+	    gen.writeArrayFieldStart("folder");
+	    Iterator<String> it = foldersPath.iterator();
+	    while(it.hasNext()){
+		String f = it.next();
+		gen.writeString(f);
+	    }
+	    gen.writeEndArray();
+	    gen.writeNumberField("folder_depth", depth);
+	    
+	    stringOut(gen,"subject", email.getSubject());
+	    stringOut(gen,"received", receivedTime);
+	    stringOut(gen,"from_name", email.getSenderName());
+	    
+	    stringOut(gen, "from", email.getSenderEmailAddress());
+
+
+
+
+	    stringOut(gen, "message_id", email.getInternetMessageId());
+	    stringOut(gen, "in_reply_to_id", email.getInReplyToId());
+	    
+	    
 	    gen.writeArrayFieldStart("recipients");
-
 	    try{
 		int n = email.getNumberOfRecipients();
 		
@@ -100,8 +115,9 @@ public class Pst2json {
 		    //gen.writeString(recip.getEmailAddress());
 		    gen.writeStartObject();
 		    //gen.writeString(recip.getSmtpAddress());
-		    gen.writeStringField("name", recip.getDisplayName());
-		    gen.writeStringField("email", recip.getSmtpAddress());
+		    stringOut(gen,"name", recip.getDisplayName());
+		    stringOut(gen,"smtp", recip.getSmtpAddress());
+		    stringOut(gen,"email", recip.getEmailAddress());
 		    gen.writeEndObject();
 		}
 	    }catch(PSTException e){
@@ -119,12 +135,15 @@ public class Pst2json {
 			try{
 			    PSTAttachment att = email.getAttachment(i);
 			    gen.writeStartObject();
-			    gen.writeStringField("filename", att.getFilename());
+			    stringOut(gen,"filename", att.getFilename());
 			    gen.writeNumberField("size", att.getAttachSize());
 			    String mime = att.getMimeTag();
-			    gen.writeStringField("mime", mime);
-			    gen.writeStringField("disposition", att.getAttachmentContentDisposition());
+			    stringOut(gen,"mime", mime);
+			    stringOut(gen,"disposition", att.getAttachmentContentDisposition());
 			    gen.writeNumberField("attach_type", att.getAttachMethod());
+			    if (att.getAttachMethod() >= 5){
+				stringOut(gen,"content6", att.toString());
+			    }
 
 			    //if (att.getAttachMethod() == 5){
 			    if (true || mime != null && mime.length() > 0){
@@ -133,7 +152,7 @@ public class Pst2json {
 
 				is = att.getFileInputStream();
 				if (is != null){
-					gen.writeFieldName("foobar");
+					gen.writeFieldName("content");
 					gen.writeBinary(is, -1);
 					//gen.writeEndObject();
 				    }
@@ -170,7 +189,7 @@ public class Pst2json {
 		}
 	    //--Attachments
 
-	    gen.writeStringField("body", email.getBodyPrefix());
+	    stringOut(gen,"body", email.getBodyPrefix());
 	    
 	    gen.writeEndObject();
 	    
@@ -181,4 +200,12 @@ public class Pst2json {
 	}
 
     }
+
+	public final void stringOut(JsonGenerator gen, String key, String value) throws IOException{
+	    if (value != null && value.length()>0){
+		gen.writeStringField(key, value);
+	    }
+
+	}
 }
+
