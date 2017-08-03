@@ -15,7 +15,7 @@ public class Pst2json {
     public  Pst2json(String filename) {
         try {
             PSTFile pstFile = new PSTFile(filename);
-            System.err.println(pstFile.getMessageStore().getDisplayName());
+            //System.err.println(pstFile.getMessageStore().getDisplayName());
 	    JsonFactory jfactory = new JsonFactory();
 	    JsonGenerator gen = jfactory.createJsonGenerator(System.out);
 	    gen.useDefaultPrettyPrinter();
