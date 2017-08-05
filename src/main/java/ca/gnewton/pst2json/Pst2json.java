@@ -8,7 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Pst2json {
-    boolean jsonOut = true;
+    boolean jsonOut = false;
     
     public static void main(String[] args)
     {
@@ -22,11 +22,11 @@ public class Pst2json {
 	    Writer writer = null;
 	    if (jsonOut){
 		writer = new JsonWriter();
-		//processFolder(pstFile.getRootFolder(), gen, foldersPath);
-		
+	    }else{
+		writer = new XmlWriter();
 	    }
 	    Stack<String> foldersPath = new Stack<String>();
-	    writer.process(pstFile.getRootFolder(), foldersPath);
+	    writer.process(pstFile.getRootFolder(), foldersPath); 
         } catch (Exception err) {
             err.printStackTrace();
         }
