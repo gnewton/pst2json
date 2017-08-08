@@ -11,32 +11,30 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+
+import java.util.Base64.Encoder;
+
 public class XmlWriter implements Writer{
-    private JsonGenerator gen;
-    
+
+    private Marshaller jaxbMarshaller = null;
+
     public XmlWriter() throws Exception{
 
-	JsonFactory jfactory = new JsonFactory();
-	this.gen = jfactory.createJsonGenerator(System.out);
-	this.gen.useDefaultPrettyPrinter();
-	gen.writeStartObject();
+
 	Stack<String> foldersPath = new Stack<String>();
-    }
 
+	JAXBContext jaxbContext = JAXBContext.newInstance(XmlRecord.class);
+	jaxbMarshaller = jaxbContext.createMarshaller();
+	jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+	jaxbMarshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
+
+
+    }
     public void close() throws Exception{
-	gen.writeEndObject();
-	gen.close();
-    }
-
-    
-    private final void stringOut(JsonGenerator gen, String key, String value) throws IOException{
-	if (value != null && value.length()>0){
-	    gen.writeStringField(key, value);
-	}
 
     }
-
-
 
 
     int depth = 0;
@@ -66,8 +64,8 @@ public class XmlWriter implements Writer{
                 //printDepth();
                 //System.out.println("Email: "+email.getSubject() + "|| " + email.getMessageDeliveryTime());
 		try{
-		    print(email, gen, foldersPath, depth);
-		}catch(PSTException  e){
+		    print(email, null, foldersPath, depth);
+		}catch(Exception  e){
 		    throw new IOException();
 		}
                 email = (PSTMessage)folder.getNextChild();
@@ -92,128 +90,119 @@ public class XmlWriter implements Writer{
 
 	    
 	    XmlRecord r = new XmlRecord();
-	    JAXBContext jaxbContext = JAXBContext.newInstance(XmlRecord.class);
-	    Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-	    jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 	     
-	    gen.writeObjectFieldStart("message");
+	    //gen.writeObjectFieldStart("message");
 	    r.setFolderDepth(depth);
-	    gen.writeNumberField("folder_depth", depth);
+	    ////gen.writeNumberField("folder_depth", depth);
 	    
 	    // Write folder hierarchy as list of strings
-	    gen.writeArrayFieldStart("folder");
+	    //gen.writeArrayFieldStart("folder");
 	    Iterator<String> it = foldersPath.iterator();
 	    while(it.hasNext()){
 		String f = it.next();
-		gen.writeString(f);
+		//gen.writeString(f);
 	    }
-	    gen.writeEndArray();
+	    //gen.writeEndArray();
 
 	    
-	    stringOut(gen,"subject", email.getSubject());
+
 	    r.setSubject(email.getSubject());
-	    stringOut(gen,"received", receivedTime);
-	    stringOut(gen,"from_name", email.getSenderName());
-	    stringOut(gen, "from", email.getSenderEmailAddress());
-	    stringOut(gen, "message_id", email.getInternetMessageId());
-	    stringOut(gen, "in_reply_to_id", email.getInReplyToId());
+	    r.setReceived(receivedTime);
+	    r.setFrom_name(email.getSenderName());
+	    r.setFrom(email.getSenderEmailAddress());
+	    r.setMessage_id(email.getInternetMessageId());
+	    r.setIn_reply_to_id(email.getInReplyToId());
+
 	    if (email.getConversationId() != null){
-		gen.writeBinaryField("conversation_id", email.getConversationId());
+		r.setConversation_id(Base64.getEncoder().encodeToString(email.getConversationId()));
 	    }
-	    gen.writeNumberField("importance", email.getImportance());
-	    stringOut(gen, "in_reply_to_id", email.getInReplyToId());
-	    gen.writeNumberField("internet_article_number", email.getInternetArticleNumber());
-
-	    gen.writeNumberField("num_recipients", email.getNumberOfRecipients());
-	    gen.writeNumberField("num_attachments", email.getNumberOfAttachments());
-
-
-
-	    gen.writeNumberField("priority", email.getPriority());
-	    gen.writeNumberField("sensitivity", email.getSensitivity());
-	    stringOut(gen, "return_path", email.getReturnPath());
-	    stringOut(gen, "transport_message_headers", email.getTransportMessageHeaders());
-
+	    r.setImportance(email.getImportance());
+	    r.setInternet_article_number(email.getInternetArticleNumber());
+	    r.setNum_recipients(email.getNumberOfRecipients());
+	    r.setNum_attachments(email.getNumberOfAttachments());
+	    r.setPriority(email.getPriority());
+	    r.setSensitivity(email.getSensitivity());
+	    if (email.getReturnPath() != null && email.getReturnPath().length() > 0){
+		r.setReturn_path(email.getReturnPath());
+	    }
+	    //r.setTransport_message_headers(email.getTransportMessageHeaders());
 
 	    // All booleans
-	    gen.writeBooleanField("cc_me", email.getMessageCcMe());
-	    gen.writeBooleanField("message_recip_me", email.getMessageRecipMe());
-	    gen.writeBooleanField("message_to_me", email.getMessageToMe());
-	    gen.writeBooleanField("response_requested", email.getResponseRequested());
-	    gen.writeBooleanField("attachments", email.hasAttachments());
-	    gen.writeBooleanField("forwarded", email.hasForwarded());
-	    gen.writeBooleanField("replied", email.hasReplied());
-	    gen.writeBooleanField("from_me", email.isFromMe());
-	    gen.writeBooleanField("read", email.isRead());
-	    gen.writeBooleanField("reply_requested", email.isReplyRequested());
-	    gen.writeBooleanField("resent", email.isResent());
-	    gen.writeBooleanField("submitted", email.isSubmitted());
-	    gen.writeBooleanField("unmodified", email.isUnmodified());
-	    gen.writeBooleanField("unsent", email.isUnsent() );
+	    r.setCc_me(email.getMessageCcMe());
+	    r.setMessage_recip_me(email.getMessageRecipMe());
+	    r.setMessage_to_me(email.getMessageToMe());
+	    r.setResponse_requested(email.getResponseRequested());
+	    r.setAttachments(email.hasAttachments());
+	    r.setForwarded(email.hasForwarded());
+	    r.setReplied(email.hasReplied());
+	    r.setFrom_me(email.isFromMe());
+	    r.setRead(email.isRead());
+	    r.setReply_requested(email.isReplyRequested());
+	    r.setResent(email.isResent());
+	    r.setSubmitted(email.isSubmitted());
+	    r.setUnmodified(email.isUnmodified());
+	    r.setUnsent(email.isUnsent());
 		
-	    gen.writeArrayFieldStart("recipients");
+	    //gen.writeArrayFieldStart("recipients");
 	    try{
 		int n = email.getNumberOfRecipients();
-		
+
 		for (int i=0; i<n; i++){
+		    
 		    PSTRecipient recip = email.getRecipient(i);
-		    //gen.writeString(recip.getEmailAddress());
-		    gen.writeStartObject();
-		    //gen.writeString(recip.getSmtpAddress());
-		    stringOut(gen,"name", recip.getDisplayName());
-		    stringOut(gen,"smtp", recip.getSmtpAddress());
-		    stringOut(gen,"email", recip.getEmailAddress());
+		    ////gen.writeString(recip.getEmailAddress());
+		    //gen.writeStartObject();
+		    ////gen.writeString(recip.getSmtpAddress());
+		    //stringOut(gen,"name", recip.getDisplayName());
+		    //stringOut(gen,"smtp", recip.getSmtpAddress());
+		    //stringOut(gen,"email", recip.getEmailAddress());
 		    int mapi = recip.getRecipientFlags();
 		    switch (mapi){
 		    case com.pff.PSTRecipient.MAPI_BCC: 
-			stringOut(gen, "mapi", "BCC");
+			//stringOut(gen, "mapi", "BCC");
 			break;
 		    case com.pff.PSTRecipient.MAPI_CC: 
-			stringOut(gen, "mapi", "CC");
+			//stringOut(gen, "mapi", "CC");
 			break;
 		    case com.pff.PSTRecipient.MAPI_TO: 
-			stringOut(gen, "mapi", "TO");
+			//stringOut(gen, "mapi", "TO");
 			break;
 			    
 		    }
 
-		    gen.writeEndObject();
+		    //gen.writeEndObject();
+
 		}
 	    }catch(PSTException e){
 		e.printStackTrace();
 	    }
     
-	    gen.writeEndArray();
+	    //gen.writeEndArray();
 
 	    //++Attachments
 	    int numberAttachments = email.getNumberOfAttachments();
 
 	    if (numberAttachments>0){
-		gen.writeArrayFieldStart("attachments");
+		//gen.writeArrayFieldStart("attachments");
+		r.mattachments = new XmlAttachment[numberAttachments];
+		XmlAttachment xat;
 		for(int i=0; i<numberAttachments; i++){
 		    try{
-			PSTAttachment att = email.getAttachment(i);
-			gen.writeStartObject();
-			stringOut(gen,"filename", att.getFilename());
-			gen.writeNumberField("size", att.getAttachSize());
-			String mime = att.getMimeTag();
-			stringOut(gen,"mime", mime);
-			stringOut(gen,"disposition", att.getAttachmentContentDisposition());
-			gen.writeNumberField("attach_type", att.getAttachMethod());
-			if (att.getAttachMethod() >= 5){
-			    stringOut(gen,"content6", att.toString());
-			}
+			xat = new XmlAttachment();
+			r.mattachments[i] = xat;
 
-			//if (att.getAttachMethod() == 5){
-			if (true || mime != null && mime.length() > 0){
+			PSTAttachment att = email.getAttachment(i);
+			xat.setFilename(att.getFilename());
+			xat.setSize(att.getAttachSize());
+			xat.setAttachment_content_disposition(att.getAttachmentContentDisposition());
+			xat.setAttach_type(att.getAttachMethod());
+			
 			    java.io.InputStream is = null;
 			    try{
-
 				is = att.getFileInputStream();
 				if (is != null){
-				    gen.writeFieldName("content");
-				    gen.writeBinary(is, -1);
-				    //gen.writeEndObject();
+				    byte[] contentBytes = inputStream2ByteArray(is);
+				    xat.setContent(Base64.getEncoder().encodeToString(contentBytes));
 				}
 
 			    }catch(IOException e){
@@ -235,23 +224,23 @@ public class XmlWriter implements Writer{
 				    }
 				}
 			    }
-			}
+
 			    
-			gen.writeEndObject();
+			    //gen.writeEndObject();
 		    }catch(PSTException e){
 			e.printStackTrace();
 			throw e;
 		    }
 			
 		}
-		gen.writeEndArray();
+		//gen.writeEndArray();
 	    }
 	    //--Attachments
 
-	    stringOut(gen,"body", email.getBodyPrefix());
+	 
 	    
-	    gen.writeEndObject();
-	    end("message");
+	 
+	 
 	    
 	    jaxbMarshaller.marshal(r, System.out);
 	}catch(Exception e){
@@ -261,27 +250,19 @@ public class XmlWriter implements Writer{
 
     }
 
-    void tag(String tag){
-	System.out.println("<" + tag + ">");
+
+    // Derived from: http://www.baeldung.com/convert-input-stream-to-array-of-bytes
+    byte[] inputStream2ByteArray(InputStream is) throws IOException{
+	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+	int nRead;
+	byte[] data = new byte[1024];
+	while ((nRead = is.read(data, 0, data.length)) != -1) {
+	    buffer.write(data, 0, nRead);
+	}
+	
+	buffer.flush();
+	return buffer.toByteArray();
     }
 
-    void end(String tag){
-	System.out.println("</" + tag + ">");
-    }
-
-    void numberTag(String tag, int v){
-	System.out.println("<" + tag + " v=" + v + " />");
-    }
-
-    void booleanTag(String tag, boolean v){
-	System.out.println("<" + tag + " v=" + (v?"t":"f") + " />");
-    }
-
-    void stringTag(String tag, String v){
-	tag(tag);
-	System.out.println(v);
-	end(tag);
-    }
-    
 }
 

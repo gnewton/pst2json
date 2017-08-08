@@ -8,5 +8,4 @@ interface Writer{
 
     public void process(PSTFolder folder,Stack<String>foldersPath) throws Exception;
     public void close() throws Exception;
-	
 }

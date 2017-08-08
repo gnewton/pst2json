@@ -6,15 +6,27 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name="message")
 public class XmlRecord{
-    private String from_name;
-    private String from;
-    private String received;
-    private String subject;
-    /**
-     * Describe message_id here.
-     */
-    private String message_id;
+    private String from_name=null;
+    private String from=null;
+    private String received=null;
+    private String subject=null;
+    private String message_id=null;
+    private String in_reply_to_id=null;
+    private String return_path=null;
+    private String transport_message_headers=null;
+    private String conversation_id=null;
+
+    @XmlElement(name="attachment")
+    protected XmlAttachment[] mattachments;
     
+    public final String getConversation_id() {
+	return conversation_id;
+    }
+    @XmlElement
+    public final void setConversation_id(final String conversation_id) {
+	this.conversation_id = conversation_id;
+    }
+
     String[] folder;
 
     @XmlElement
@@ -58,9 +70,31 @@ public class XmlRecord{
 	this.message_id = message_id;
     }
 
-    String in_reply_to_id;
-    String return_path;
-    String transport_message_headers;
+    @XmlAttribute
+    public final String getIn_reply_to_id() {
+	return this.in_reply_to_id;
+    }
+    public final void setIn_reply_to_id(final String in_reply_to_id) {
+	this.in_reply_to_id = in_reply_to_id;
+    }
+
+    @XmlElement
+    public final String getReturn_path() {
+	return return_path;
+    }
+    public final void setReturn_path(final String return_path) {
+	this.return_path = return_path;
+    }
+
+        @XmlElement
+    public final String getTransport_message_headers() {
+	return transport_message_headers;
+    }
+    public final void setTransport_message_headers(final String transport_message_headers) {
+	this.transport_message_headers = transport_message_headers;
+    }
+
+
     String body;
 
     boolean cc_me;
