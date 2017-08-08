@@ -15,9 +15,16 @@ public class XmlRecord{
     private String return_path=null;
     private String transport_message_headers=null;
     private String conversation_id=null;
+    /**
+     * Describe foldersPath here.
+     */
+    private String foldersPath;
 
-    @XmlElement(name="attachment")
-    protected XmlAttachment[] mattachments;
+    @XmlElement(name="attachments")
+    protected XmlAttachments mattachments;
+
+    @XmlElement(name="recipients")
+    protected XmlRecipients mrecipients;
     
     public final String getConversation_id() {
 	return conversation_id;
@@ -290,6 +297,13 @@ public class XmlRecord{
         public int getSensitivity(){
 	    return this.sensitivity;
     }
-    
-	
+
+    @XmlAttribute
+    public final String getFoldersPath() {
+	return foldersPath;
+    }
+    public final void setFoldersPath(final String foldersPath) {
+	this.foldersPath = foldersPath;
+    }
+
 }

@@ -87,24 +87,21 @@ public class XmlWriter implements Writer{
 	    receivedTime  = dateFormat.format(rec);
 	}
 	try{
-
-	    
 	    XmlRecord r = new XmlRecord();
-	     
-	    //gen.writeObjectFieldStart("message");
 	    r.setFolderDepth(depth);
-	    ////gen.writeNumberField("folder_depth", depth);
-	    
+
+	    StringBuilder sb = new StringBuilder();
 	    // Write folder hierarchy as list of strings
 	    //gen.writeArrayFieldStart("folder");
 	    Iterator<String> it = foldersPath.iterator();
-	    while(it.hasNext()){
-		String f = it.next();
-		//gen.writeString(f);
-	    }
-	    //gen.writeEndArray();
-
 	    
+	    while(it.hasNext()){
+		if (sb.length() > 0){
+		    sb.append("/");
+		    }
+		sb.append(it.next().replaceAll("/", "_"));
+	    }
+	    r.setFoldersPath(sb.toString());
 
 	    r.setSubject(email.getSubject());
 	    r.setReceived(receivedTime);
@@ -146,26 +143,28 @@ public class XmlWriter implements Writer{
 	    //gen.writeArrayFieldStart("recipients");
 	    try{
 		int n = email.getNumberOfRecipients();
-
+		if (n > 0){
+			
+		    r.mrecipients = new XmlRecipients();
+		r.mrecipients.recipients = new XmlRecipient[n];
 		for (int i=0; i<n; i++){
-		    
+		    XmlRecipient xrecip = new XmlRecipient();
+		    r.mrecipients.recipients[i] = xrecip;
+ 		    
 		    PSTRecipient recip = email.getRecipient(i);
-		    ////gen.writeString(recip.getEmailAddress());
-		    //gen.writeStartObject();
-		    ////gen.writeString(recip.getSmtpAddress());
-		    //stringOut(gen,"name", recip.getDisplayName());
-		    //stringOut(gen,"smtp", recip.getSmtpAddress());
-		    //stringOut(gen,"email", recip.getEmailAddress());
+		    xrecip.setName(recip.getDisplayName());
+		    xrecip.setEmail(recip.getEmailAddress());
+		    xrecip.setSmtp(recip.getSmtpAddress());
 		    int mapi = recip.getRecipientFlags();
 		    switch (mapi){
-		    case com.pff.PSTRecipient.MAPI_BCC: 
-			//stringOut(gen, "mapi", "BCC");
+		    case com.pff.PSTRecipient.MAPI_BCC:
+			xrecip.setMapi("BCC");
+ 			break;
+		    case com.pff.PSTRecipient.MAPI_CC:
+			xrecip.setMapi("CC");
 			break;
-		    case com.pff.PSTRecipient.MAPI_CC: 
-			//stringOut(gen, "mapi", "CC");
-			break;
-		    case com.pff.PSTRecipient.MAPI_TO: 
-			//stringOut(gen, "mapi", "TO");
+		    case com.pff.PSTRecipient.MAPI_TO:
+			xrecip.setMapi("TO");
 			break;
 			    
 		    }
@@ -173,6 +172,7 @@ public class XmlWriter implements Writer{
 		    //gen.writeEndObject();
 
 		}
+		    }
 	    }catch(PSTException e){
 		e.printStackTrace();
 	    }
@@ -184,12 +184,14 @@ public class XmlWriter implements Writer{
 
 	    if (numberAttachments>0){
 		//gen.writeArrayFieldStart("attachments");
-		r.mattachments = new XmlAttachment[numberAttachments];
+		r.mattachments = new XmlAttachments();
+		r.mattachments.attachments = new XmlAttachment[numberAttachments];
+
 		XmlAttachment xat;
 		for(int i=0; i<numberAttachments; i++){
 		    try{
 			xat = new XmlAttachment();
-			r.mattachments[i] = xat;
+			r.mattachments.attachments[i] = xat;
 
 			PSTAttachment att = email.getAttachment(i);
 			xat.setFilename(att.getFilename());
