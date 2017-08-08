@@ -196,6 +196,7 @@ public class XmlWriter implements Writer{
 			PSTAttachment att = email.getAttachment(i);
 			xat.setFilename(att.getFilename());
 			xat.setSize(att.getAttachSize());
+			xat.setMime(att.getMimeTag());
 			xat.setAttachment_content_disposition(att.getAttachmentContentDisposition());
 			xat.setAttach_type(att.getAttachMethod());
 			
