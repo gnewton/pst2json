@@ -118,7 +118,7 @@ public class XmlRecord{
     public void setMessage_recip_me(boolean v){
 	this.message_recip_me = v;
     }
-        public boolean getMessage_recip_me(){
+    public boolean getMessage_recip_me(){
 	    return this.message_recip_me;
     }
     

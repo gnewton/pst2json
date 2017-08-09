@@ -26,7 +26,8 @@ public class Pst2json {
 		writer = new XmlWriter();
 	    }
 	    Stack<String> foldersPath = new Stack<String>();
-	    writer.process(pstFile.getRootFolder(), foldersPath); 
+	    writer.process(pstFile.getRootFolder(), foldersPath);
+	    writer.close();
         } catch (Exception err) {
             err.printStackTrace();
         }

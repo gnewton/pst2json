@@ -1,7 +1,5 @@
 package ca.gnewton.pst2json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonFactory;
 import java.io.IOException;
 import com.pff.*;
 import java.util.*;
@@ -30,10 +28,20 @@ public class XmlWriter implements Writer{
 	jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 	jaxbMarshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
 
+	System.out.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>");
+	System.out.println("<messages>");
+
+
+	JAXBContext context = JAXBContext.newInstance(XmlMeta.class);
+	Marshaller marshaller = context.createMarshaller();
+	marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
+	XmlMeta m = new XmlMeta("filaname", "foobar");
+	marshaller.marshal(m, System.out);
 
     }
     public void close() throws Exception{
-
+	System.out.println("</messages>");
     }
 
 
@@ -64,7 +72,7 @@ public class XmlWriter implements Writer{
                 //printDepth();
                 //System.out.println("Email: "+email.getSubject() + "|| " + email.getMessageDeliveryTime());
 		try{
-		    print(email, null, foldersPath, depth);
+		    print(email, foldersPath, depth);
 		}catch(Exception  e){
 		    throw new IOException();
 		}
@@ -79,7 +87,7 @@ public class XmlWriter implements Writer{
     }
     final SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
-    public final void print(PSTMessage email, JsonGenerator gen, Stack<String> foldersPath, int depth) throws PSTException {
+    public final void print(PSTMessage email, Stack<String> foldersPath, int depth) throws PSTException {
 
 	Date rec = email.getMessageDeliveryTime();
 	String receivedTime="";
