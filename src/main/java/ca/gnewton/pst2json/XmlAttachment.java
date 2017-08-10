@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class XmlAttachment{
     private String filename;
     private String mime;
+    private String sha1Base64;
     private String attachment_content_disposition;
     private int attach_type;
     private String content;
@@ -55,6 +56,16 @@ public class XmlAttachment{
 
     public final void setContent(final String content) {
 	this.content = content;
+    }
+
+
+    @XmlElement
+    public final String getSha1Base64() {
+	return sha1Base64;
+    }
+
+    public final void setSha1Base64(final String sha1Base64) {
+	this.sha1Base64 = sha1Base64;
     }
 
         @XmlAttribute

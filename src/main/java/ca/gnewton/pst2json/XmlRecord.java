@@ -264,7 +264,7 @@ public class XmlRecord{
     }
     
     int num_recipients;
-    @XmlAttribute
+    @XmlElement
     public void setNum_recipients(int v){
 	this.num_recipients = v;
     }

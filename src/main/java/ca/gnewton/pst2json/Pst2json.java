@@ -29,7 +29,8 @@ public class Pst2json {
 	    writer.process(pstFile.getRootFolder(), foldersPath);
 	    writer.close();
         } catch (Exception err) {
-            err.printStackTrace();
+            //err.printStackTrace();
+	    //System.err.println("***");
         }
     }
 

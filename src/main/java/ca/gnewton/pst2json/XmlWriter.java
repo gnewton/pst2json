@@ -2,7 +2,7 @@ package ca.gnewton.pst2json;
 
 import java.io.IOException;
 import com.pff.*;
-import java.util.*;
+//import java.util.*;
 import java.text.SimpleDateFormat;
 
 import javax.xml.bind.JAXBContext;
@@ -11,8 +11,16 @@ import javax.xml.bind.Marshaller;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 
-import java.util.Base64.Encoder;
+import java.util.Base64;
+import java.util.Stack;
+import java.util.Vector;
+import java.util.Date;
+import java.util.Iterator;
 
 public class XmlWriter implements Writer{
 
@@ -106,7 +114,7 @@ public class XmlWriter implements Writer{
 	    while(it.hasNext()){
 		if (sb.length() > 0){
 		    sb.append("/");
-		    }
+		}
 		sb.append(it.next().replaceAll("/", "_"));
 	    }
 	    r.setFoldersPath(sb.toString());
@@ -147,43 +155,9 @@ public class XmlWriter implements Writer{
 	    r.setSubmitted(email.isSubmitted());
 	    r.setUnmodified(email.isUnmodified());
 	    r.setUnsent(email.isUnsent());
-		
-	    //gen.writeArrayFieldStart("recipients");
-	    try{
-		int n = email.getNumberOfRecipients();
-		if (n > 0){
-			
-		    r.mrecipients = new XmlRecipients();
-		r.mrecipients.recipients = new XmlRecipient[n];
-		for (int i=0; i<n; i++){
-		    XmlRecipient xrecip = new XmlRecipient();
-		    r.mrecipients.recipients[i] = xrecip;
- 		    
-		    PSTRecipient recip = email.getRecipient(i);
-		    xrecip.setName(recip.getDisplayName());
-		    xrecip.setEmail(recip.getEmailAddress());
-		    xrecip.setSmtp(recip.getSmtpAddress());
-		    int mapi = recip.getRecipientFlags();
-		    switch (mapi){
-		    case com.pff.PSTRecipient.MAPI_BCC:
-			xrecip.setMapi("BCC");
- 			break;
-		    case com.pff.PSTRecipient.MAPI_CC:
-			xrecip.setMapi("CC");
-			break;
-		    case com.pff.PSTRecipient.MAPI_TO:
-			xrecip.setMapi("TO");
-			break;
-			    
-		    }
 
-		    //gen.writeEndObject();
-
-		}
-		    }
-	    }catch(PSTException e){
-		e.printStackTrace();
-	    }
+	    handleRecipients(r, email);
+	    
     
 	    //gen.writeEndArray();
 
@@ -206,38 +180,44 @@ public class XmlWriter implements Writer{
 			xat.setSize(att.getAttachSize());
 			xat.setMime(att.getMimeTag());
 			xat.setAttachment_content_disposition(att.getAttachmentContentDisposition());
-			xat.setAttach_type(att.getAttachMethod());
-			
-			    java.io.InputStream is = null;
-			    try{
-				is = att.getFileInputStream();
-				if (is != null){
-				    byte[] contentBytes = inputStream2ByteArray(is);
-				    xat.setContent(Base64.getEncoder().encodeToString(contentBytes));
-				}
+			xat.setAttach_type(att.getAttachMethod());	
+		
+			java.io.InputStream is = null;
+			try{
+			    is = att.getFileInputStream();
+			    if (is != null){
+				//xat.setContent(inputStream2Base64String(is));
+				AttachmentUtils au = new AttachmentUtils();
+				au.convertToBase64(is);
+				xat.setContent(au.contentBase64);
+				xat.setSha1Base64(au.contentSha1Base64);
+				System.err.println(att.getFilename() + "::[" + att.getMimeTag() + "]");
+				String tmp = au.extractText(att.getFilename(), att.getMimeTag());
 
-			    }catch(IOException e){
-				e.printStackTrace();
-				throw e;
 			    }
-			    catch( PSTException e){
-				e.printStackTrace();
-				throw e;
-			    }
-			    catch(Throwable t){
-				t.printStackTrace();
-			    }finally{
-				if (is != null){
-				    try{
-					is.close();
-				    }catch(IOException e){
-					e.printStackTrace();
-				    }
+
+			}catch(IOException e){
+			    e.printStackTrace();
+			    throw e;
+			}
+			catch( PSTException e){
+			    e.printStackTrace();
+			    throw e;
+			}
+			catch(Throwable t){
+			    t.printStackTrace();
+			}finally{
+			    if (is != null){
+				try{
+				    is.close();
+				}catch(IOException e){
+				    e.printStackTrace();
 				}
 			    }
+			}
 
 			    
-			    //gen.writeEndObject();
+			//gen.writeEndObject();
 		    }catch(PSTException e){
 			e.printStackTrace();
 			throw e;
@@ -248,11 +228,6 @@ public class XmlWriter implements Writer{
 	    }
 	    //--Attachments
 
-	 
-	    
-	 
-	 
-	    
 	    jaxbMarshaller.marshal(r, System.out);
 	}catch(Exception e){
 	    e.printStackTrace();
@@ -261,19 +236,37 @@ public class XmlWriter implements Writer{
 
     }
 
-
-    // Derived from: http://www.baeldung.com/convert-input-stream-to-array-of-bytes
-    byte[] inputStream2ByteArray(InputStream is) throws IOException{
-	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-	int nRead;
-	byte[] data = new byte[1024];
-	while ((nRead = is.read(data, 0, data.length)) != -1) {
-	    buffer.write(data, 0, nRead);
-	}
-	
-	buffer.flush();
-	return buffer.toByteArray();
+    void handleRecipients(XmlRecord r, PSTMessage email) throws PSTException, IOException{
+	    int n = email.getNumberOfRecipients();
+	    if (n > 0){
+		r.mrecipients = new XmlRecipients();
+		r.mrecipients.recipients = new XmlRecipient[n];
+		for (int i=0; i<n; i++){
+		    XmlRecipient xrecip = new XmlRecipient();
+		    r.mrecipients.recipients[i] = xrecip;
+ 		    
+		    PSTRecipient recip = email.getRecipient(i);
+		    xrecip.setName(recip.getDisplayName());
+		    xrecip.setEmail(recip.getEmailAddress());
+		    xrecip.setSmtp(recip.getSmtpAddress());
+		    int mapi = recip.getRecipientFlags();
+		    switch (mapi){
+		    case com.pff.PSTRecipient.MAPI_BCC:
+			xrecip.setMapi("BCC");
+ 			break;
+		    case com.pff.PSTRecipient.MAPI_CC:
+			xrecip.setMapi("CC");
+			break;
+		    case com.pff.PSTRecipient.MAPI_TO:
+			xrecip.setMapi("TO");
+			break;
+			    
+		    }
+		}
+	    }
     }
+    
+
 
 }
 
