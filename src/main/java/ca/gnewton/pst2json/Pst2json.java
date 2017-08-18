@@ -6,25 +6,72 @@ import com.pff.*;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.io.File;
+import gnu.getopt.Getopt;
 
 public class Pst2json {
-    boolean jsonOut = false;
+    Outputs output = Outputs.XML;
+    boolean gzipOut = false;
     
-    public static void main(String[] args)
+    public final static void main(String[] args)
     {
-        new Pst2json(args[0]);
+	Pst2json pj = new Pst2json();
+	String []arg = pj.handleOpts(args);
+	if (arg.length != 1){
+	    System.err.println("Missing PST filename");
+	    System.exit(1);
+	}
+
+	if (!exists(arg[0])){
+	    System.err.println("Unable to read file: " + arg[0]);
+	    System.exit(1);
+	}
+	pj.run(arg[0]);
+
     }
 
-    public  Pst2json(String filename) {
+    public final static boolean exists(String filename){
+	File f = new File(filename);
+	return f.isFile() && f.canRead();
+    }
+    
+    public final String[] handleOpts(String[] argv){
+	Getopt g = new Getopt("", argv, "+j");
+	//
+	int c;
+	String arg;
+	while ((c = g.getopt()) != -1)
+	    {
+		switch(c)
+		    {
+		    case 'j':
+			output = Outputs.JSON;
+			break;
+		    default:
+			System.out.print("getopt() returned " + c + "\n");
+		    }
+	    }
+	return Arrays.copyOfRange(argv, g.getOptind(), argv.length);
+
+    }
+    
+    public Pst2json() {
+
+    }
+    
+    public final void run(String filename) {
         try {
             PSTFile pstFile = new PSTFile(filename);
-            //System.err.println(pstFile.getMessageStore().getDisplayName());
 	    Writer writer = null;
-	    if (jsonOut){
-		writer = new JsonWriter();
-	    }else{
+	    switch(output){
+	    case XML:
 		writer = new XmlWriter();
+		break;
+	    case JSON:
+		writer = new JsonWriter();
+		break;
 	    }
+
 	    Stack<String> foldersPath = new Stack<String>();
 	    writer.process(pstFile.getRootFolder(), foldersPath);
 	    writer.close();
@@ -35,11 +82,10 @@ public class Pst2json {
     }
 
 
-	public final void stringOut(JsonGenerator gen, String key, String value) throws IOException{
-	    if (value != null && value.length()>0){
-		gen.writeStringField(key, value);
-	    }
-
+    public final void stringOut(JsonGenerator gen, String key, String value) throws IOException{
+	if (value != null && value.length()>0){
+	    gen.writeStringField(key, value);
 	}
+    }
 }
 

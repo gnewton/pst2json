@@ -158,8 +158,6 @@ public class XmlWriter implements Writer{
 
 	    handleRecipients(r, email);
 	    
-    
-	    //gen.writeEndArray();
 
 	    //++Attachments
 	    int numberAttachments = email.getNumberOfAttachments();
