@@ -6,14 +6,16 @@ import java.io.IOException;
 import com.pff.*;
 import java.util.*;
 import java.text.SimpleDateFormat;
+import java.io.OutputStream;
 
 public class JsonWriter implements Writer{
     private JsonGenerator gen;
+    OutputStream out = null;
     
-    public JsonWriter() throws Exception{
-
+    public JsonWriter(OutputStream out) throws Exception{
+	this.out = out;
 	JsonFactory jfactory = new JsonFactory();
-	this.gen = jfactory.createJsonGenerator(System.out);
+	this.gen = jfactory.createJsonGenerator(out);
 	this.gen.useDefaultPrettyPrinter();
 	gen.writeStartObject();
 	Stack<String> foldersPath = new Stack<String>();

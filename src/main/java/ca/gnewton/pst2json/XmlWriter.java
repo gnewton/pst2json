@@ -21,13 +21,15 @@ import java.util.Stack;
 import java.util.Vector;
 import java.util.Date;
 import java.util.Iterator;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 public class XmlWriter implements Writer{
 
     private Marshaller jaxbMarshaller = null;
-
-    public XmlWriter() throws Exception{
-
+    OutputStream out = null;
+    public XmlWriter(OutputStream out) throws Exception{
+	this.out = out;
 
 	Stack<String> foldersPath = new Stack<String>();
 
@@ -36,8 +38,8 @@ public class XmlWriter implements Writer{
 	jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 	jaxbMarshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
 
-	System.out.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>");
-	System.out.println("<messages>");
+	out.write("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>".getBytes(StandardCharsets.UTF_8));
+	out.write("<messages>".getBytes(StandardCharsets.UTF_8));
 
 
 	JAXBContext context = JAXBContext.newInstance(XmlMeta.class);
@@ -45,15 +47,17 @@ public class XmlWriter implements Writer{
 	marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
 	XmlMeta m = new XmlMeta("filaname", "foobar");
-	marshaller.marshal(m, System.out);
+	marshaller.marshal(m, out);
 
     }
     public void close() throws Exception{
-	System.out.println("</messages>");
+	out.write("</messages>".getBytes(StandardCharsets.UTF_8));
+	out.flush();
+	out.close();
     }
 
 
-    int depth = 0;
+    int depth = 0; 
     public final void process(PSTFolder folder,Stack<String>foldersPath)
 	throws PSTException, java.io.IOException
     {
@@ -217,13 +221,11 @@ public class XmlWriter implements Writer{
 			e.printStackTrace();
 			throw e;
 		    }
-			
 		}
 		//gen.writeEndArray();
 	    }
 	    //--Attachments
-
-	    jaxbMarshaller.marshal(r, System.out);
+	    jaxbMarshaller.marshal(r, out);
 	}catch(Exception e){
 	    e.printStackTrace();
 	    return;

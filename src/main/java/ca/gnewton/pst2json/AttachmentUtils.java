@@ -72,6 +72,9 @@ public class AttachmentUtils{
 	catch(TikaException err){
 	    err.printStackTrace();
 	}
+	catch(Throwable t){
+	    t.printStackTrace();
+	}
 
 	String tmp = handler.toString();
 	//System.err.println(tmp);

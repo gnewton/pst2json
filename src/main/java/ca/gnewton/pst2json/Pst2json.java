@@ -8,6 +8,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.io.File;
 import gnu.getopt.Getopt;
+import java.io.OutputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class Pst2json {
     Outputs output = Outputs.XML;
@@ -36,7 +38,7 @@ public class Pst2json {
     }
     
     public final String[] handleOpts(String[] argv){
-	Getopt g = new Getopt("", argv, "+j");
+	Getopt g = new Getopt("", argv, "+jz");
 	//
 	int c;
 	String arg;
@@ -46,6 +48,10 @@ public class Pst2json {
 		    {
 		    case 'j':
 			output = Outputs.JSON;
+			break;
+
+		    case 'z':
+			gzipOut = true;
 			break;
 		    default:
 			System.out.print("getopt() returned " + c + "\n");
@@ -63,15 +69,18 @@ public class Pst2json {
         try {
             PSTFile pstFile = new PSTFile(filename);
 	    Writer writer = null;
+	    OutputStream out = makeOutputStream();
 	    switch(output){
 	    case XML:
-		writer = new XmlWriter();
+		writer = new XmlWriter(out);
 		break;
 	    case JSON:
-		writer = new JsonWriter();
+		writer = new JsonWriter(out);
 		break;
 	    }
 
+
+	    
 	    Stack<String> foldersPath = new Stack<String>();
 	    writer.process(pstFile.getRootFolder(), foldersPath);
 	    writer.close();
@@ -81,6 +90,14 @@ public class Pst2json {
         }
     }
 
+    public OutputStream makeOutputStream() throws IOException{
+	if (gzipOut){
+	    GZIPOutputStream go = new GZIPOutputStream(System.out);
+	    return go;
+	}
+	return System.out;
+    }
+    
 
     public final void stringOut(JsonGenerator gen, String key, String value) throws IOException{
 	if (value != null && value.length()>0){
