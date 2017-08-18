@@ -14,6 +14,7 @@ import java.util.zip.GZIPOutputStream;
 public class Pst2json {
     Outputs output = Outputs.XML;
     boolean gzipOut = false;
+    boolean extractTextFromAttachments = false;
     
     public final static void main(String[] args)
     {
@@ -38,7 +39,7 @@ public class Pst2json {
     }
     
     public final String[] handleOpts(String[] argv){
-	Getopt g = new Getopt("", argv, "+jz");
+	Getopt g = new Getopt("", argv, "+jzt");
 	//
 	int c;
 	String arg;
@@ -48,6 +49,10 @@ public class Pst2json {
 		    {
 		    case 'j':
 			output = Outputs.JSON;
+			break;
+
+		    case 't':
+			extractTextFromAttachments = true;
 			break;
 
 		    case 'z':
@@ -72,10 +77,10 @@ public class Pst2json {
 	    OutputStream out = makeOutputStream();
 	    switch(output){
 	    case XML:
-		writer = new XmlWriter(out);
+		writer = new XmlWriter(out, extractTextFromAttachments);
 		break;
 	    case JSON:
-		writer = new JsonWriter(out);
+		writer = new JsonWriter(out, extractTextFromAttachments);
 		break;
 	    }
 

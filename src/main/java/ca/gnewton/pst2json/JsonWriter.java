@@ -11,9 +11,12 @@ import java.io.OutputStream;
 public class JsonWriter implements Writer{
     private JsonGenerator gen;
     OutputStream out = null;
+        boolean extractTextFromAttachments = false;
     
-    public JsonWriter(OutputStream out) throws Exception{
+    public JsonWriter(OutputStream out, final boolean extractTextFromAttachments) throws Exception{
 	this.out = out;
+	this.extractTextFromAttachments = extractTextFromAttachments;
+	
 	JsonFactory jfactory = new JsonFactory();
 	this.gen = jfactory.createJsonGenerator(out);
 	this.gen.useDefaultPrettyPrinter();

@@ -26,10 +26,13 @@ import java.nio.charset.StandardCharsets;
 
 public class XmlWriter implements Writer{
 
+    boolean extractTextFromAttachments = false;
     private Marshaller jaxbMarshaller = null;
     OutputStream out = null;
-    public XmlWriter(OutputStream out) throws Exception{
+    
+    public XmlWriter(OutputStream out,  final boolean extractTextFromAttachments) throws Exception{
 	this.out = out;
+	this.extractTextFromAttachments = extractTextFromAttachments;
 
 	Stack<String> foldersPath = new Stack<String>();
 
@@ -192,7 +195,9 @@ public class XmlWriter implements Writer{
 				au.convertToBase64(is);
 				xat.setContent(au.contentBase64);
 				xat.setSha1Base64(au.contentSha1Base64);
-				xat.setContentTextExtracted(au.extractText(att.getFilename(), att.getMimeTag()));
+				if (this.extractTextFromAttachments){
+				    xat.setContentTextExtracted(au.extractText(att.getFilename(), att.getMimeTag()));
+				}
 			    }
 
 			}catch(IOException e){
