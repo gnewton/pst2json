@@ -53,7 +53,7 @@ public class AttachmentUtils{
 		|| mime.equals("::message/rfc822")
 	    )
 	    ){
-	    return "null";
+	    return null;
 	}
 	ByteArrayInputStream bis = new ByteArrayInputStream(content);
 	AutoDetectParser parser = new AutoDetectParser();
@@ -75,8 +75,6 @@ public class AttachmentUtils{
 
 	String tmp = handler.toString();
 	//System.err.println(tmp);
-	System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-	System.err.println(tmp.length());
 	return tmp;
     }
 

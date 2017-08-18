@@ -12,6 +12,7 @@ public class XmlAttachment{
     private String attachment_content_disposition;
     private int attach_type;
     private String content;
+    private String contentTextExtracted;
     /**
      * Describe size here.
      */
@@ -75,5 +76,16 @@ public class XmlAttachment{
     public final void setSize(final int size) {
 	this.size = size;
     }
+
+
+        @XmlElement
+    public final String getContentTextExtracted() {
+	return contentTextExtracted;
+    }
+
+    public final void setContentTextExtracted(final String contentTextExtracted) {
+	this.contentTextExtracted = contentTextExtracted;
+    }
+
 
 }

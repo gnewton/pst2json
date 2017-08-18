@@ -186,14 +186,11 @@ public class XmlWriter implements Writer{
 			try{
 			    is = att.getFileInputStream();
 			    if (is != null){
-				//xat.setContent(inputStream2Base64String(is));
 				AttachmentUtils au = new AttachmentUtils();
 				au.convertToBase64(is);
 				xat.setContent(au.contentBase64);
 				xat.setSha1Base64(au.contentSha1Base64);
-				System.err.println(att.getFilename() + "::[" + att.getMimeTag() + "]");
-				String tmp = au.extractText(att.getFilename(), att.getMimeTag());
-
+				xat.setContentTextExtracted(au.extractText(att.getFilename(), att.getMimeTag()));
 			    }
 
 			}catch(IOException e){
