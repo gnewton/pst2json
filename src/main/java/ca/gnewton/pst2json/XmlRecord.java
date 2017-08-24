@@ -103,6 +103,14 @@ public class XmlRecord{
 
 
     String body;
+    public final String getBody(){
+	return this.body;
+    }
+    public final void setBody(final String body){
+	this.body = body;
+    }
+	   
+    
 
     boolean cc_me;
     @XmlAttribute
