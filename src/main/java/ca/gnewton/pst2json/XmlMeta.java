@@ -15,6 +15,15 @@ public class XmlMeta{
      	setKey(k);
      	setValue(v);
      }
+
+    public XmlMeta(final String k, final boolean b){
+     	setKey(k);
+	if (b){
+	    setValue("true");
+	}else{
+	    	    setValue("false");
+	}
+     }
     
     String key;
     @XmlAttribute

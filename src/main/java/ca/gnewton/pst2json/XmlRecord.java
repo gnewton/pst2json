@@ -101,8 +101,8 @@ public class XmlRecord{
 	this.transport_message_headers = transport_message_headers;
     }
 
-
     String body;
+    @XmlElement
     public final String getBody(){
 	return this.body;
     }

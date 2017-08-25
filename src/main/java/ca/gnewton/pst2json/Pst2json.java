@@ -13,6 +13,7 @@ import java.util.zip.GZIPOutputStream;
 
 public class Pst2json {
     Outputs output = Outputs.XML;
+    boolean base64Body = true;
     boolean gzipOut = false;
     boolean extractTextFromAttachments = false;
     
@@ -39,7 +40,7 @@ public class Pst2json {
     }
     
     public final String[] handleOpts(String[] argv){
-	Getopt g = new Getopt("", argv, "+jzt");
+	Getopt g = new Getopt("", argv, "+jztB");
 	//
 	int c;
 	String arg;
@@ -49,6 +50,10 @@ public class Pst2json {
 		    {
 		    case 'j':
 			output = Outputs.JSON;
+			break;
+
+		    case 'B':
+			base64Body = false;
 			break;
 
 		    case 't':
@@ -77,20 +82,18 @@ public class Pst2json {
 	    OutputStream out = makeOutputStream();
 	    switch(output){
 	    case XML:
-		writer = new XmlWriter(out, extractTextFromAttachments);
+		writer = new XmlWriter(out, extractTextFromAttachments, base64Body);
 		break;
 	    case JSON:
 		writer = new JsonWriter(out, extractTextFromAttachments);
 		break;
 	    }
 
-
-	    
 	    Stack<String> foldersPath = new Stack<String>();
 	    writer.process(pstFile.getRootFolder(), foldersPath);
 	    writer.close();
         } catch (Exception err) {
-            //err.printStackTrace();
+            err.printStackTrace();
 	    //System.err.println("***");
         }
     }
