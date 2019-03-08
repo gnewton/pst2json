@@ -11,21 +11,21 @@ import java.security.NoSuchProviderException;
 import java.util.Base64.Encoder;
 import java.util.Base64;
 
-import org.apache.tika.exception.TikaException;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.sax.BodyContentHandler;
-import org.xml.sax.SAXException;
+ import org.apache.tika.exception.TikaException;
+ import org.apache.tika.metadata.Metadata;
+ import org.apache.tika.parser.AutoDetectParser;
+ import org.apache.tika.sax.BodyContentHandler;
+ import org.xml.sax.SAXException;
 
 
 public class AttachmentUtils{
     String contentBase64;
     byte[] content;
-    String contentSha1Base64;
+    String contentSha256Hex;
 
     // Derived from: http://www.baeldung.com/convert-input-stream-to-array-of-bytes
     public final void convertToBase64(InputStream is) throws IOException, NoSuchAlgorithmException{
-	MessageDigest sha = MessageDigest.getInstance("SHA-1");
+	MessageDigest sha = MessageDigest.getInstance("SHA-256");
 	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 	int len;
 	byte[] data = new byte[8192];
@@ -37,11 +37,22 @@ public class AttachmentUtils{
 	byte[] shaDigest = sha.digest();
 	
 	this.content = buffer.toByteArray();
-	this.contentSha1Base64 = Base64.getEncoder().encodeToString(shaDigest);
+        this.contentSha256Hex = bytesToHex(shaDigest);
 	this.contentBase64 = Base64.getEncoder().encodeToString(this.content);
     }
 
 
+    private static String bytesToHex(byte[] hash) {
+        StringBuffer hexString = new StringBuffer();
+        for (int i = 0; i < hash.length; i++) {
+            String hex = Integer.toHexString(0xff & hash[i]);
+            if(hex.length() == 1) hexString.append('0');
+            hexString.append(hex);
+        }
+        return hexString.toString();
+}
+
+    
     public final String extractText(String filename, String mime){
 	if (!hasAcceptableSuffix(filename)
 	    &&
@@ -55,6 +66,7 @@ public class AttachmentUtils{
 	    ){
 	    return null;
 	}
+        System.err.println("Extracting text for: " + filename + "   mime=" + mime);
 	ByteArrayInputStream bis = new ByteArrayInputStream(content);
 	AutoDetectParser parser = new AutoDetectParser();
 	BodyContentHandler handler = new BodyContentHandler(-1);
@@ -63,6 +75,10 @@ public class AttachmentUtils{
 	try{
 	    parser.parse(bis, handler, metadata);
 	}
+        catch(org.apache.tika.exception.EncryptedDocumentException){
+	    err.printStackTrace();
+            return "<<Encrypted document>>";
+        }
 	catch(IOException err){
 	    err.printStackTrace();
 	}
@@ -76,9 +92,7 @@ public class AttachmentUtils{
 	    t.printStackTrace();
 	}
 
-	String tmp = handler.toString();
-	//System.err.println(tmp);
-	return tmp;
+	return handler.toString();
     }
 
     boolean hasAcceptableSuffix(String s){

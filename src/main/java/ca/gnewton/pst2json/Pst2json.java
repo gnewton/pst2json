@@ -21,16 +21,19 @@ public class Pst2json {
     {
 	Pst2json pj = new Pst2json();
 	String []arg = pj.handleOpts(args);
-	if (arg.length != 1){
+	if (arg.length < 1){
 	    System.err.println("Missing PST filename");
 	    System.exit(1);
 	}
 
-	if (!exists(arg[0])){
-	    System.err.println("Unable to read file: " + arg[0]);
-	    System.exit(1);
-	}
-	pj.run(arg[0]);
+        int i;
+        for (i=0; i<arg.length; i++){
+            if (!exists(arg[i])){
+                System.err.println("Unable to read file: " + arg[i]);
+                System.exit(1);
+            }
+        }
+	pj.run(arg);
 
     }
 
@@ -75,29 +78,49 @@ public class Pst2json {
 
     }
     
-    public final void run(String filename) {
-        try {
-            PSTFile pstFile = new PSTFile(filename);
-	    Writer writer = null;
-	    OutputStream out = makeOutputStream();
-	    switch(output){
-	    case XML:
-		writer = new XmlWriter(out, extractTextFromAttachments, base64Body);
-		break;
-	    case JSON:
-		writer = new JsonWriter(out, extractTextFromAttachments);
-		break;
-	    }
+    public final void run(String []filenames) {
+        Writer writer = null;
+        OutputStream out;
 
-	    Stack<String> foldersPath = new Stack<String>();
-	    writer.process(pstFile.getRootFolder(), foldersPath);
-	    writer.close();
+        try{
+            out = makeOutputStream();
         } catch (Exception err) {
             err.printStackTrace();
-	    //System.err.println("***");
+            return;
+        }
+        
+        int i;
+        for(i=0; i<filenames.length; i++){
+            String filename = filenames[i];
+            
+            try {
+                System.err.println("Opening PST file: " + filename);
+                PSTFile pstFile = new PSTFile(filename);
+
+                switch(output){
+                case XML:
+                    writer = new XmlWriter(out, extractTextFromAttachments, base64Body);
+                    break;
+                case JSON:
+                    writer = new JsonWriter(out, extractTextFromAttachments);
+                    break;
+                }
+                
+                Stack<String> foldersPath = new Stack<String>();
+                writer.process(pstFile.getRootFolder(), foldersPath);
+                
+            } catch (Exception err) {
+                err.printStackTrace();
+                return;
+            }
+
+        }
+        try{
+            writer.close();
+        } catch (Exception err) {
+            err.printStackTrace();
         }
     }
-
     public OutputStream makeOutputStream() throws IOException{
 	if (gzipOut){
 	    GZIPOutputStream go = new GZIPOutputStream(System.out);

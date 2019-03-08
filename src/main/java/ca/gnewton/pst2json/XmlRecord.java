@@ -15,6 +15,7 @@ public class XmlRecord{
     private String return_path=null;
     private String transport_message_headers=null;
     private String conversation_id=null;
+
     /**
      * Describe foldersPath here.
      */
@@ -29,6 +30,7 @@ public class XmlRecord{
     public final String getConversation_id() {
 	return conversation_id;
     }
+
     @XmlElement
     public final void setConversation_id(final String conversation_id) {
 	this.conversation_id = conversation_id;
@@ -43,6 +45,8 @@ public class XmlRecord{
     public final void setSubject(final String subject) {
 	this.subject = subject;
     }
+
+
 
 
     @XmlElement
@@ -109,6 +113,8 @@ public class XmlRecord{
     public final void setBody(final String body){
 	this.body = body;
     }
+
+    
 	   
     
 
