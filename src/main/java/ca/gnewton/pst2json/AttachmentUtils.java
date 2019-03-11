@@ -11,6 +11,8 @@ import java.security.NoSuchProviderException;
 import java.util.Base64.Encoder;
 import java.util.Base64;
 
+import javax.xml.bind.DatatypeConverter;
+
  import org.apache.tika.exception.TikaException;
  import org.apache.tika.metadata.Metadata;
  import org.apache.tika.parser.AutoDetectParser;
@@ -27,22 +29,27 @@ public class AttachmentUtils{
     public final void convertToBase64(InputStream is) throws IOException, NoSuchAlgorithmException{
 	MessageDigest sha = MessageDigest.getInstance("SHA-256");
 	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-	int len;
-	byte[] data = new byte[8192];
-	while ((len = is.read(data, 0, data.length)) != -1) {
-	    buffer.write(data, 0, len);
-	    sha.update(data,0,len);
+
+	byte[] data = new byte[1024];
+        int bytesRead= -1;
+	while ((bytesRead = is.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, bytesRead);
 	}
 	buffer.flush();
-	byte[] shaDigest = sha.digest();
 	
 	this.content = buffer.toByteArray();
-        this.contentSha256Hex = bytesToHex(shaDigest);
+
+        sha.update(content, 0, content.length);
+	byte[] shaBytes = sha.digest();
+        this.contentSha256Hex = bytesToHex(shaBytes);
 	this.contentBase64 = Base64.getEncoder().encodeToString(this.content);
     }
 
+        private static String bytesToHex(byte[] hash) {
+            return DatatypeConverter.printHexBinary(hash);
+        }
 
-    private static String bytesToHex(byte[] hash) {
+    private static String bytesToHex2(byte[] hash) {
         StringBuffer hexString = new StringBuffer();
         for (int i = 0; i < hash.length; i++) {
             String hex = Integer.toHexString(0xff & hash[i]);
@@ -75,7 +82,7 @@ public class AttachmentUtils{
 	try{
 	    parser.parse(bis, handler, metadata);
 	}
-        catch(org.apache.tika.exception.EncryptedDocumentException){
+        catch(org.apache.tika.exception.EncryptedDocumentException err){
 	    err.printStackTrace();
             return "<<Encrypted document>>";
         }

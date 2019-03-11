@@ -88,6 +88,29 @@ public class Pst2json {
             err.printStackTrace();
             return;
         }
+
+
+        
+        switch(output){
+        case XML:
+            try{
+                writer = new XmlWriter(out, extractTextFromAttachments, base64Body);
+            }catch (Exception err) {
+                err.printStackTrace();
+                return;
+            }
+            break;
+        case JSON:
+            try{
+                writer = new JsonWriter(out, extractTextFromAttachments);
+            }
+            catch (Exception err) {
+                err.printStackTrace();
+                return;
+            }
+            break;
+        }
+        
         
         int i;
         for(i=0; i<filenames.length; i++){
@@ -96,15 +119,6 @@ public class Pst2json {
             try {
                 System.err.println("Opening PST file: " + filename);
                 PSTFile pstFile = new PSTFile(filename);
-
-                switch(output){
-                case XML:
-                    writer = new XmlWriter(out, extractTextFromAttachments, base64Body);
-                    break;
-                case JSON:
-                    writer = new JsonWriter(out, extractTextFromAttachments);
-                    break;
-                }
                 
                 Stack<String> foldersPath = new Stack<String>();
                 writer.process(pstFile.getRootFolder(), foldersPath);
