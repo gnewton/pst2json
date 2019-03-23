@@ -11,8 +11,13 @@ public class XmlAttachment{
     private String sha256Hex;
     private String attachment_content_disposition;
     private int attach_type;
-    private String content;
-    private String contentTextExtracted;
+    @XmlElement
+    XmlContent newContent;
+    @XmlElement
+    XmlContent newContentTextExtracted;
+
+    String content;
+    String contentTextExtracted;
     /**
      * Describe size here.
      */

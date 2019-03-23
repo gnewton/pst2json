@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedInputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -13,32 +14,49 @@ import java.util.Base64;
 
 import javax.xml.bind.DatatypeConverter;
 
- import org.apache.tika.exception.TikaException;
- import org.apache.tika.metadata.Metadata;
- import org.apache.tika.parser.AutoDetectParser;
- import org.apache.tika.sax.BodyContentHandler;
- import org.xml.sax.SAXException;
-
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.sax.BodyContentHandler;
+import org.xml.sax.SAXException;
+import org.apache.commons.io.IOUtils;
 
 public class AttachmentUtils{
     String contentBase64;
     byte[] content;
     String contentSha256Hex;
 
-    // Derived from: http://www.baeldung.com/convert-input-stream-to-array-of-bytes
-    public final void convertToBase64(InputStream is) throws IOException, NoSuchAlgorithmException{
-	MessageDigest sha = MessageDigest.getInstance("SHA-256");
+
+    public AttachmentUtils(){
+        
+    }
+
+    public AttachmentUtils(InputStream is)throws IOException{
+
+        this.content = IOUtils.toByteArray(is);
+        /*
+        BufferedInputStream bis = new BufferedInputStream(is);
+            
 	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
-	byte[] data = new byte[1024];
+	byte[] data = new byte[65536];
         int bytesRead= -1;
-	while ((bytesRead = is.read(data, 0, data.length)) != -1) {
+	while ((bytesRead = bis.read(data, 0, data.length)) != -1) {
             buffer.write(data, 0, bytesRead);
 	}
 	buffer.flush();
-	
-	this.content = buffer.toByteArray();
+        this.content = buffer.toByteArray();
 
+        bis.close();
+        is.close();
+        buffer.close();
+        */
+    }
+    
+    // Derived from: http://www.baeldung.com/convert-input-stream-to-array-of-bytes
+    public final void convertToBase64() throws IOException, NoSuchAlgorithmException{
+	MessageDigest sha = MessageDigest.getInstance("SHA-256");
+	
         sha.update(content, 0, content.length);
 	byte[] shaBytes = sha.digest();
         this.contentSha256Hex = bytesToHex(shaBytes);
@@ -74,7 +92,7 @@ public class AttachmentUtils{
 	    return null;
 	}
         System.err.println("Extracting text for: " + filename + "   mime=" + mime);
-	ByteArrayInputStream bis = new ByteArrayInputStream(content);
+	BufferedInputStream bis = new BufferedInputStream(new ByteArrayInputStream(content));
 	AutoDetectParser parser = new AutoDetectParser();
 	BodyContentHandler handler = new BodyContentHandler(-1);
 	Metadata metadata = new Metadata();
