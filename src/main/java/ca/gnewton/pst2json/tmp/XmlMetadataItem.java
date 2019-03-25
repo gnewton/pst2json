@@ -1,13 +1,15 @@
 package ca.gnewton.pst2json;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="content")
-public class XmlContent{
-    public static final String Base64Encoding = "b64";
-    @XmlElement
-    String data;
+@XmlRootElement(name="m")
+public class XmlMetadataItem{
+    
     @XmlAttribute
-    String contentEncoding;
+    String n;
+
+    @XmlAttribute
+    String v;
 }

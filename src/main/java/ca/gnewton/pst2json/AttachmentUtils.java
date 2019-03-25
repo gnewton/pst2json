@@ -24,8 +24,12 @@ import org.apache.commons.io.IOUtils;
 public class AttachmentUtils{
     String contentBase64;
     byte[] content;
-    String contentSha256Hex;
+    XmlMeta[] metadata;
+    String tikaMime;
+    
+    //String contentSha256Hex;
 
+    public static final String[] parsableSuffixes= {".doc",".DOC",".docx",".DOCX",".ppt",".PPT",".pptx",".PPTX",".pdf",".PDF",".xls",".XLS",".xlsx",".XLSX",".xml",".XML",".html",".HTML",".htm",".HTM",".rtf",".RFT"};
 
     public AttachmentUtils(){
         
@@ -55,11 +59,11 @@ public class AttachmentUtils{
     
     // Derived from: http://www.baeldung.com/convert-input-stream-to-array-of-bytes
     public final void convertToBase64() throws IOException, NoSuchAlgorithmException{
-	MessageDigest sha = MessageDigest.getInstance("SHA-256");
+	//MessageDigest sha = MessageDigest.getInstance("SHA-256");
 	
-        sha.update(content, 0, content.length);
-	byte[] shaBytes = sha.digest();
-        this.contentSha256Hex = bytesToHex(shaBytes);
+        //sha.update(content, 0, content.length);
+	//byte[] shaBytes = sha.digest();
+        //this.contentSha256Hex = bytesToHex(shaBytes);
 	this.contentBase64 = Base64.getEncoder().encodeToString(this.content);
     }
 
@@ -95,10 +99,10 @@ public class AttachmentUtils{
 	BufferedInputStream bis = new BufferedInputStream(new ByteArrayInputStream(content));
 	AutoDetectParser parser = new AutoDetectParser();
 	BodyContentHandler handler = new BodyContentHandler(-1);
-	Metadata metadata = new Metadata();
+	Metadata tikaMetadata = new Metadata();
 
 	try{
-	    parser.parse(bis, handler, metadata);
+	    parser.parse(bis, handler, tikaMetadata);
 	}
         catch(org.apache.tika.exception.EncryptedDocumentException err){
 	    err.printStackTrace();
@@ -115,12 +119,44 @@ public class AttachmentUtils{
 	}
 	catch(Throwable t){
 	    t.printStackTrace();
-	}
-
+	}finally{
+            try{
+                bis.close();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+	//System.err.println("Tika metadata:" + metadata.toString());
+        //this.metadata = metadata.toString();
+        this.makeContentMetadata(tikaMetadata);
 	return handler.toString();
     }
 
+    final void makeContentMetadata(Metadata tikaMetadata){
+        XmlMeta[] items = new XmlMeta[tikaMetadata.size()];
+        this.metadata = items;
+
+        XmlMeta item;
+
+        String[] names = tikaMetadata.names();
+        int len = names.length;
+        int i;
+        for(i=0; i<len; i++){
+            item = new XmlMeta();
+            items[i] = item;
+            item.key = stripNull(names[i]);
+            item.value = stripNull(tikaMetadata.get(names[i]));
+            if (names[i] == "Content-Type"){
+                this.tikaMime = item.value;
+            }
+        }
+
+            
+    }
+
     boolean hasAcceptableSuffix(String s){
+        return true;
+        /*
 	return s.endsWith(".doc")
 	    || s.endsWith(".DOC")
 	    || s.endsWith(".docx")
@@ -139,5 +175,13 @@ public class AttachmentUtils{
 	    || s.endsWith(".HTM")
 	    || s.endsWith(".rtf")
 	    || s.endsWith(".RFT");
+    }
+        */
+    }
+
+    public static final String stripNull(String s){
+        //return s.replaceAll("U+0000", "");
+        return s.replaceAll("\u0000", "").replaceAll("\u0007", "");
+        
     }
 }

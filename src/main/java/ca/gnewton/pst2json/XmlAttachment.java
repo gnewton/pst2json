@@ -9,17 +9,19 @@ public class XmlAttachment{
     @XmlAttribute
      String filename;
     @XmlAttribute
-     String mime;
-    @XmlAttribute
-     String sha256Hex;
+     String mime = null;
+    //@XmlAttribute
+    //String sha256Hex;
     @XmlAttribute
      String attachment_content_disposition;
     @XmlAttribute
      int attach_type;
     @XmlElement
+    XmlMeta[] meta;
+    @XmlElement
     XmlContent content;
     @XmlElement
-    XmlContent contentTextExtracted;
+    XmlContentExtracted contentTextExtracted;
     @XmlElement
      int size;
 

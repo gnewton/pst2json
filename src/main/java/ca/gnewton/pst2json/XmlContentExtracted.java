@@ -3,11 +3,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="content")
-public class XmlContent{
-    public static final String Base64Encoding = "b64";
+@XmlRootElement(name="contentExtracted")
+public class XmlContentExtracted{
     @XmlElement
-    String data;
-    @XmlAttribute
-    String contentEncoding;
+    XmlContent content;
 }
