@@ -7,6 +7,6 @@ import java.io.OutputStream;
 
 interface Writer{
 
-    public void process(PSTFolder folder,Stack<String>foldersPath) throws Exception;
+    public void process(PSTFolder folder,Stack<String>foldersPath, int filesource_id) throws Exception;
     public void close() throws Exception;
 }

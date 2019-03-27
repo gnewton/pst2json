@@ -41,7 +41,7 @@ public class JsonWriter implements Writer{
 
 
     int depth = 0;
-    public final void process(PSTFolder folder,Stack<String>foldersPath)
+    public final void process(PSTFolder folder,Stack<String>foldersPath, int filesource_id)
 	throws PSTException, java.io.IOException
     {
 
@@ -55,7 +55,7 @@ public class JsonWriter implements Writer{
         if (folder.hasSubfolders()) {
             Vector<PSTFolder> childFolders = folder.getSubFolders();
             for (PSTFolder childFolder : childFolders) {
-                this.process(childFolder, foldersPath);
+                this.process(childFolder, foldersPath,filesource_id);
             }
         }
 

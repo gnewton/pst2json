@@ -34,7 +34,7 @@ public class XmlWriter implements Writer{
     private Marshaller jaxbMarshaller = null;
     OutputStream out = null;
     
-    public XmlWriter(OutputStream out,  final boolean extractTextFromAttachments, final boolean base64Body) throws Exception{
+    public XmlWriter(OutputStream out,  final boolean extractTextFromAttachments, final boolean base64Body, String []filenames) throws Exception{
 	this.out = out;
 	this.base64Body = base64Body;
 	this.extractTextFromAttachments = extractTextFromAttachments;
@@ -50,24 +50,40 @@ public class XmlWriter implements Writer{
 	out.write("<messages>".getBytes(StandardCharsets.UTF_8));
 
 
-	JAXBContext context = JAXBContext.newInstance(XmlMeta.class);
-	Marshaller marshaller = context.createMarshaller();
-	marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
-	marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+	JAXBContext metaContext = JAXBContext.newInstance(XmlMeta.class);
+	Marshaller metaMarshaller = metaContext.createMarshaller();
+	metaMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+	metaMarshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
+	metaMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
 	//
 
 	SimpleDateFormat sdf = new SimpleDateFormat("yyyy MMM dd HH:mm:ss");
 	Calendar calendar = Calendar.getInstance();
 
 	XmlMeta m = new XmlMeta("timestamp", sdf.format(calendar.getTime()));
-	marshaller.marshal(m, new OutputStreamWriter(out, "UTF-8"));
+	metaMarshaller.marshal(m, new OutputStreamWriter(out, "UTF-8"));
 
 	m = new XmlMeta("created_by", "ca.gnewton.pst2json");
-	marshaller.marshal(m, out);
+	metaMarshaller.marshal(m, out);
 
 	m = new XmlMeta("base64_body", this.base64Body);
-	marshaller.marshal(m, out);
+	metaMarshaller.marshal(m, out);
+        
+        m = new XmlMeta("num_filesources", filenames.length + "");
+        metaMarshaller.marshal(m, out);
+
+
+        JAXBContext fsContext = JAXBContext.newInstance(XmlFileSource.class);
+        Marshaller fsMarshaller = fsContext.createMarshaller();
+	fsMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+	fsMarshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
+	fsMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+	//
+        int i;
+        for(i=0; i<filenames.length; i++){
+            XmlFileSource fs = new XmlFileSource(i,filenames[i]);
+            fsMarshaller.marshal(fs, out);
+        }
     }
     public void close() throws Exception{
 	out.write("</messages>".getBytes(StandardCharsets.UTF_8));
@@ -77,7 +93,7 @@ public class XmlWriter implements Writer{
 
 
     int depth = 0; 
-    public final void process(PSTFolder folder,Stack<String>foldersPath)
+    public final void process(PSTFolder folder,Stack<String>foldersPath, int filesource_id)
 	throws PSTException, java.io.IOException
     {
         Worker worker = new Worker();
@@ -91,7 +107,7 @@ public class XmlWriter implements Writer{
         if (folder.hasSubfolders()) {
             Vector<PSTFolder> childFolders = folder.getSubFolders();
             for (PSTFolder childFolder : childFolders) {
-                this.process(childFolder, foldersPath);
+                this.process(childFolder, foldersPath,filesource_id);
             }
         }
 
@@ -103,7 +119,7 @@ public class XmlWriter implements Writer{
                 //printDepth();
                 //System.out.println("Email: "+email.getSubject() + "|| " + email.getMessageDeliveryTime());
 		try{
-		    worker.print(jaxbMarshaller,out,email, foldersPath, depth, base64Body,extractTextFromAttachments);
+		    worker.print(jaxbMarshaller,out,email, foldersPath, filesource_id, depth, base64Body,extractTextFromAttachments);
 		}catch(Exception  e){
 		    throw new IOException();
 		}

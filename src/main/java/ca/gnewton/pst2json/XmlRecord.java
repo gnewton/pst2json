@@ -25,6 +25,9 @@ public class XmlRecord{
     String message_id=null;
 
     @XmlAttribute
+    int filesource_id=-1;
+
+    @XmlAttribute
     String in_reply_to_id=null;
 
     @XmlAttribute

@@ -12,10 +12,6 @@ import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class Pst2json {
-    Outputs output = Outputs.XML;
-    boolean base64Body = true;
-    boolean gzipOut = false;
-    boolean extractTextFromAttachments = false;
     
     public final static void main(String[] args)
     {
@@ -52,19 +48,19 @@ public class Pst2json {
 		switch(c)
 		    {
 		    case 'j':
-			output = Outputs.JSON;
+			Config.output = Outputs.JSON;
 			break;
 
 		    case 'B':
-			base64Body = false;
+			Config.base64Body = false;
 			break;
 
 		    case 't':
-			extractTextFromAttachments = true;
+			Config.extractTextFromAttachments = true;
 			break;
 
 		    case 'z':
-			gzipOut = true;
+			Config.gzipOut = true;
 			break;
 		    default:
 			System.out.print("getopt() returned " + c + "\n");
@@ -91,10 +87,10 @@ public class Pst2json {
 
 
         
-        switch(output){
+        switch(Config.output){
         case XML:
             try{
-                writer = new XmlWriter(out, extractTextFromAttachments, base64Body);
+                writer = new XmlWriter(out, Config.extractTextFromAttachments, Config.base64Body, filenames);
             }catch (Exception err) {
                 err.printStackTrace();
                 return;
@@ -102,7 +98,7 @@ public class Pst2json {
             break;
         case JSON:
             try{
-                writer = new JsonWriter(out, extractTextFromAttachments);
+                writer = new JsonWriter(out, Config.extractTextFromAttachments);
             }
             catch (Exception err) {
                 err.printStackTrace();
@@ -117,11 +113,11 @@ public class Pst2json {
             String filename = filenames[i];
             
             try {
-                System.err.println("Opening PST file: " + filename);
+                System.err.println("Opening PST file: " + filename + "  " + i + "/" + filenames.length);
                 PSTFile pstFile = new PSTFile(filename);
                 
                 Stack<String> foldersPath = new Stack<String>();
-                writer.process(pstFile.getRootFolder(), foldersPath);
+                writer.process(pstFile.getRootFolder(), foldersPath, i);
                 
             } catch (Exception err) {
                 err.printStackTrace();
@@ -136,7 +132,7 @@ public class Pst2json {
         }
     }
     public OutputStream makeOutputStream() throws IOException{
-	if (gzipOut){
+	if (Config.gzipOut){
 	    GZIPOutputStream go = new GZIPOutputStream(System.out);
 	    return go;
 	}
