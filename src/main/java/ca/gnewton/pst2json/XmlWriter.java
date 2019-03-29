@@ -30,13 +30,13 @@ import java.io.OutputStreamWriter;
 public class XmlWriter implements Writer{
 
     boolean extractTextFromAttachments = false;
-    boolean base64Body = false;
+    boolean noBase64Body = false;
     private Marshaller jaxbMarshaller = null;
     OutputStream out = null;
     
-    public XmlWriter(OutputStream out,  final boolean extractTextFromAttachments, final boolean base64Body, String []filenames) throws Exception{
+    public XmlWriter(OutputStream out,  final boolean extractTextFromAttachments, final boolean noBase64Body, String []filenames) throws Exception{
 	this.out = out;
-	this.base64Body = base64Body;
+	this.noBase64Body = noBase64Body;
 	this.extractTextFromAttachments = extractTextFromAttachments;
 
 	Stack<String> foldersPath = new Stack<String>();
@@ -66,7 +66,7 @@ public class XmlWriter implements Writer{
 	m = new XmlMeta("created_by", "ca.gnewton.pst2json");
 	metaMarshaller.marshal(m, out);
 
-	m = new XmlMeta("base64_body", this.base64Body);
+	m = new XmlMeta("base64_body", this.noBase64Body);
 	metaMarshaller.marshal(m, out);
         
         m = new XmlMeta("num_filesources", filenames.length + "");
@@ -119,7 +119,7 @@ public class XmlWriter implements Writer{
                 //printDepth();
                 //System.out.println("Email: "+email.getSubject() + "|| " + email.getMessageDeliveryTime());
 		try{
-		    worker.print(jaxbMarshaller,out,email, foldersPath, filesource_id, depth, base64Body,extractTextFromAttachments);
+		    worker.print(jaxbMarshaller,out,email, foldersPath, filesource_id, depth, noBase64Body,extractTextFromAttachments);
 		}catch(Exception  e){
 		    throw new IOException();
 		}

@@ -39,7 +39,7 @@ public class Pst2json {
     }
     
     public final String[] handleOpts(String[] argv){
-	Getopt g = new Getopt("", argv, "+jztB");
+	Getopt g = new Getopt("", argv, "+jztBe");
 	//
 	int c;
 	String arg;
@@ -52,11 +52,15 @@ public class Pst2json {
 			break;
 
 		    case 'B':
-			Config.base64Body = false;
+			Config.noBase64Encode = true;
 			break;
 
 		    case 't':
 			Config.extractTextFromAttachments = true;
+			break;
+
+                    case 'e':
+			Config.excludeAttachments = true;
 			break;
 
 		    case 'z':
@@ -90,7 +94,7 @@ public class Pst2json {
         switch(Config.output){
         case XML:
             try{
-                writer = new XmlWriter(out, Config.extractTextFromAttachments, Config.base64Body, filenames);
+                writer = new XmlWriter(out, Config.extractTextFromAttachments, Config.noBase64Encode, filenames);
             }catch (Exception err) {
                 err.printStackTrace();
                 return;
