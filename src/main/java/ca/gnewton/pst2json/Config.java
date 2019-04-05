@@ -7,5 +7,5 @@ public class Config{
     public static boolean gzipOut = false;
     public static boolean extractTextFromAttachments = true;
     public static boolean includeAttachmentMetadata = true;
-    public static boolean excludeAttachments = false;
+    public static boolean includeAttachments = true;
 }

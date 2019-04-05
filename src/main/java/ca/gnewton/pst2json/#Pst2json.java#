@@ -85,7 +85,7 @@ public class Pst2json {
         try{
             out = makeOutputStream();
         } catch (Exception err) {
-            err.printStackTrace();
+            mlerr.printStackTrace();
             return;
         }
 

@@ -29,32 +29,43 @@ import java.io.OutputStreamWriter;
 
 public class XmlWriter implements Writer{
 
-    boolean extractTextFromAttachments = false;
-    boolean noBase64Body = false;
     private Marshaller jaxbMarshaller = null;
     OutputStream out = null;
     
-    public XmlWriter(OutputStream out,  final boolean extractTextFromAttachments, final boolean noBase64Body, String []filenames) throws Exception{
+    public XmlWriter(OutputStream out, String []filenames) throws Exception{
 	this.out = out;
-	this.noBase64Body = noBase64Body;
-	this.extractTextFromAttachments = extractTextFromAttachments;
 
-	Stack<String> foldersPath = new Stack<String>();
+        this.writeHeader(out, filenames.length);
+
+        JAXBContext fsContext = JAXBContext.newInstance(XmlFileSource.class);
+        Marshaller fsMarshaller = fsContext.createMarshaller();
+        this.setMarshalProperties(fsMarshaller);
+
+        int i;
+        for(i=0; i<filenames.length; i++){
+            XmlFileSource fs = new XmlFileSource(i,filenames[i]);
+            fsMarshaller.marshal(fs, out);
+        }
+    }
+
+    public void setMarshalProperties(Marshaller m) throws Exception{
+	m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+	m.setProperty(Marshaller.JAXB_FRAGMENT, true);
+	m.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+    }
+    
+    public void writeHeader(OutputStream out, int numFiles) throws Exception{
+        Stack<String> foldersPath = new Stack<String>();
 
 	JAXBContext jaxbContext = JAXBContext.newInstance(XmlRecord.class);
-	jaxbMarshaller = jaxbContext.createMarshaller();
-	jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-	jaxbMarshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
-
+        this.setMarshalProperties(jaxbMarshaller);
 	out.write("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>".getBytes(StandardCharsets.UTF_8));
 	out.write("<messages>".getBytes(StandardCharsets.UTF_8));
 
 
 	JAXBContext metaContext = JAXBContext.newInstance(XmlMeta.class);
 	Marshaller metaMarshaller = metaContext.createMarshaller();
-	metaMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-	metaMarshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
-	metaMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+        this.setMarshalProperties(metaMarshaller);
 	//
 
 	SimpleDateFormat sdf = new SimpleDateFormat("yyyy MMM dd HH:mm:ss");
@@ -66,25 +77,17 @@ public class XmlWriter implements Writer{
 	m = new XmlMeta("created_by", "ca.gnewton.pst2json");
 	metaMarshaller.marshal(m, out);
 
-	m = new XmlMeta("base64_body", this.noBase64Body);
+	m = new XmlMeta("base64_body", Config.noBase64Encode);
 	metaMarshaller.marshal(m, out);
         
-        m = new XmlMeta("num_filesources", filenames.length + "");
+        m = new XmlMeta("num_filesources", numFiles + "");
         metaMarshaller.marshal(m, out);
 
 
-        JAXBContext fsContext = JAXBContext.newInstance(XmlFileSource.class);
-        Marshaller fsMarshaller = fsContext.createMarshaller();
-	fsMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-	fsMarshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
-	fsMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
-	//
-        int i;
-        for(i=0; i<filenames.length; i++){
-            XmlFileSource fs = new XmlFileSource(i,filenames[i]);
-            fsMarshaller.marshal(fs, out);
-        }
+
+	
     }
+    
     public void close() throws Exception{
 	out.write("</messages>".getBytes(StandardCharsets.UTF_8));
 	out.flush();
@@ -119,7 +122,7 @@ public class XmlWriter implements Writer{
                 //printDepth();
                 //System.out.println("Email: "+email.getSubject() + "|| " + email.getMessageDeliveryTime());
 		try{
-		    worker.print(jaxbMarshaller,out,email, foldersPath, filesource_id, depth, noBase64Body,extractTextFromAttachments);
+		    worker.print(jaxbMarshaller,out,email, foldersPath, filesource_id, depth);
 		}catch(Exception  e){
 		    throw new IOException();
 		}
