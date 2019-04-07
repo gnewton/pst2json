@@ -109,7 +109,7 @@ public class XmlWriter implements Writer{
     public final void processPST(PSTFolder folder,Stack<String>foldersPath, int filesource_id)
 	throws PSTException, java.io.IOException
     {
-        Worker worker = new Worker();
+
 	String folderName = folder.getDisplayName();
 	if (folderName != null && folderName.length() >0){
 	    foldersPath.push(folder.getDisplayName());
@@ -132,7 +132,8 @@ public class XmlWriter implements Writer{
                 //printDepth();
                 //System.out.println("Email: "+email.getSubject() + "|| " + email.getMessageDeliveryTime());
 		try{
-		    worker.print(jaxbMarshaller,out,email, foldersPath, filesource_id, depth);
+                    Worker worker = new Worker(jaxbMarshaller,out,email, foldersPath, filesource_id, depth);
+		    worker.run();
 		}catch(Exception  e){
 		    throw new IOException();
 		}
