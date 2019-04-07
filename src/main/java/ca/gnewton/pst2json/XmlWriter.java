@@ -58,6 +58,7 @@ public class XmlWriter implements Writer{
         Stack<String> foldersPath = new Stack<String>();
 
 	JAXBContext jaxbContext = JAXBContext.newInstance(XmlRecord.class);
+        jaxbMarshaller = jaxbContext.createMarshaller();
         this.setMarshalProperties(jaxbMarshaller);
 	out.write("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>".getBytes(StandardCharsets.UTF_8));
 	out.write("<messages>".getBytes(StandardCharsets.UTF_8));
@@ -94,9 +95,18 @@ public class XmlWriter implements Writer{
 	out.close();
     }
 
+    public void process(String filename, int filesource_id) throws Exception{
+        System.err.println("Opening PST file: " + filename + "  " + filesource_id);
+
+        PSTFile pstFile = Util.openPSTFile(filename);
+        
+        Stack<String> foldersPath = new Stack<String>();
+        this.processPST(pstFile.getRootFolder(), foldersPath, filesource_id);
+    }
+    
 
     int depth = 0; 
-    public final void process(PSTFolder folder,Stack<String>foldersPath, int filesource_id)
+    public final void processPST(PSTFolder folder,Stack<String>foldersPath, int filesource_id)
 	throws PSTException, java.io.IOException
     {
         Worker worker = new Worker();
@@ -110,7 +120,7 @@ public class XmlWriter implements Writer{
         if (folder.hasSubfolders()) {
             Vector<PSTFolder> childFolders = folder.getSubFolders();
             for (PSTFolder childFolder : childFolders) {
-                this.process(childFolder, foldersPath,filesource_id);
+                this.processPST(childFolder, foldersPath,filesource_id);
             }
         }
 
@@ -136,7 +146,17 @@ public class XmlWriter implements Writer{
 	}
     }
 
-
+    //// mime4j
+    /*
+    public final void mime4j(){
+        CharsetEncoder ENCODER = Charset.forName("UTF-8").newEncoder();
+        final File mbox = new File(mboxPath);
+        
+        for (CharBufferWrapper message : MboxIterator.fromFile(mbox).charset(ENCODER.charset()).build()) {
+            System.out.println(message);
+        }
+    }
+    */
 
 
 }

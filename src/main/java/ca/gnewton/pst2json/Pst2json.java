@@ -115,14 +115,8 @@ public class Pst2json {
         int i;
         for(i=0; i<filenames.length; i++){
             String filename = filenames[i];
-            
             try {
-                System.err.println("Opening PST file: " + filename + "  " + i + "/" + filenames.length);
-                PSTFile pstFile = new PSTFile(filename);
-                
-                Stack<String> foldersPath = new Stack<String>();
-                writer.process(pstFile.getRootFolder(), foldersPath, i);
-                
+                writer.process(filename, i);
             } catch (Exception err) {
                 err.printStackTrace();
                 return;
@@ -149,5 +143,6 @@ public class Pst2json {
 	    gen.writeStringField(key, value);
 	}
     }
+
 }
 

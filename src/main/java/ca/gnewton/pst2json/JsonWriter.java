@@ -41,10 +41,18 @@ public class JsonWriter implements Writer{
 
 
     int depth = 0;
-    public final void process(PSTFolder folder,Stack<String>foldersPath, int filesource_id)
+    public void process(String filename, int filesource_id) //throws Exception;
+    //public final void process(PSTFolder folder,Stack<String>foldersPath, int filesource_id)
 	throws PSTException, java.io.IOException
     {
-
+        PSTFile pstFile = Util.openPSTFile(filename);
+        Stack<String> foldersPath = new Stack<String>();
+        this.processPST(pstFile.getRootFolder(), foldersPath, filesource_id);
+    }
+    
+    public final void processPST(PSTFolder folder,Stack<String>foldersPath, int filesource_id)
+	throws PSTException, java.io.IOException
+    {
 	String folderName = folder.getDisplayName();
 	if (folderName != null && folderName.length() >0){
 	    foldersPath.push(folder.getDisplayName());
@@ -55,7 +63,7 @@ public class JsonWriter implements Writer{
         if (folder.hasSubfolders()) {
             Vector<PSTFolder> childFolders = folder.getSubFolders();
             for (PSTFolder childFolder : childFolders) {
-                this.process(childFolder, foldersPath,filesource_id);
+                this.processPST(childFolder, foldersPath,filesource_id);
             }
         }
 
