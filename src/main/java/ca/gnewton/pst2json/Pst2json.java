@@ -79,6 +79,8 @@ public class Pst2json {
     }
     
     public final void run(String []filenames) {
+        System.err.println("filenames");
+        System.err.println(filenames);
         Writer writer = null;
         OutputStream out;
 
@@ -115,6 +117,16 @@ public class Pst2json {
         int i;
         for(i=0; i<filenames.length; i++){
             String filename = filenames[i];
+            System.err.println("*****************************");
+            System.err.println(filenames);
+            System.err.println(filename);
+            System.err.println(filenames.length);
+            System.err.flush();
+
+            //if (true){
+            //return;
+            //}
+            
             try {
                 writer.process(filename, i);
             } catch (Exception err) {

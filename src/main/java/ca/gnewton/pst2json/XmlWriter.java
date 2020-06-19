@@ -137,7 +137,12 @@ public class XmlWriter implements Writer{
 		}catch(Exception  e){
 		    throw new IOException();
 		}
-                email = (PSTMessage)folder.getNextChild();
+                try{
+                    email = (PSTMessage)folder.getNextChild();
+                }catch(Throwable t){
+                    // to deal with exception: java.lang.IndexOutOfBoundsException: Index: 95, Size: 95
+                    email = null;
+                }
             }
         }
 
