@@ -3,7 +3,7 @@ package ca.gnewton.pst2json;
 import java.io.IOException;
 import com.pff.*;
 //import java.util.*;
-import java.text.SimpleDateFormat;
+
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -22,7 +22,7 @@ import java.util.Vector;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Calendar;
-import java.text.SimpleDateFormat;
+
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.io.OutputStreamWriter;
@@ -69,10 +69,10 @@ public class XmlWriter implements Writer{
         this.setMarshalProperties(metaMarshaller);
 	//
 
-	SimpleDateFormat sdf = new SimpleDateFormat("yyyy MMM dd HH:mm:ss");
+
 	Calendar calendar = Calendar.getInstance();
 
-	XmlMeta m = new XmlMeta("timestamp", sdf.format(calendar.getTime()));
+	XmlMeta m = new XmlMeta("timestamp", Util.dateFormat.format(calendar.getTime()));
 	metaMarshaller.marshal(m, new OutputStreamWriter(out, "UTF-8"));
 
 	m = new XmlMeta("created_by", "ca.gnewton.pst2json");
@@ -95,63 +95,14 @@ public class XmlWriter implements Writer{
 	out.close();
     }
 
-    public void process(String filename, int filesource_id) throws Exception{
-        System.err.println("Opening PST file: " + filename + "  " + filesource_id);
-
-        PSTFile pstFile = Util.openPSTFile(filename);
-        
-        Stack<String> foldersPath = new Stack<String>();
-        this.processPST(pstFile.getRootFolder(), foldersPath, filesource_id);
-    }
     
 
-    int depth = 0; 
-    public final void processPST(PSTFolder folder,Stack<String>foldersPath, int filesource_id)
-	throws PSTException, java.io.IOException
-    {
 
-	String folderName = folder.getDisplayName();
-	if (folderName != null && folderName.length() >0){
-	    foldersPath.push(folder.getDisplayName());
-	    ++depth;
-	}
-	    
-        // go through the folders...
-        if (folder.hasSubfolders()) {
-            Vector<PSTFolder> childFolders = folder.getSubFolders();
-            for (PSTFolder childFolder : childFolders) {
-                this.processPST(childFolder, foldersPath,filesource_id);
-            }
-        }
 
-        // and now the emails for this folder
-        if (folder.getContentCount() > 0) {
-	    
-            PSTMessage email = (PSTMessage)folder.getNextChild();
-            while (email != null) {
-                //printDepth();
-                //System.out.println("Email: "+email.getSubject() + "|| " + email.getMessageDeliveryTime());
-		try{
-                    Worker worker = new Worker(jaxbMarshaller,out,email, foldersPath, filesource_id, depth);
-		    worker.run();
-		}catch(Exception  e){
-		    throw new IOException();
-		}
-                try{
-                    email = (PSTMessage)folder.getNextChild();
-                }catch(Throwable t){
-                    // to deal with exception: java.lang.IndexOutOfBoundsException: Index: 95, Size: 95
-                    email = null;
-                }
-            }
-        }
-
-	if (folderName != null && folderName.length() >0){
-	    --depth;
-	    foldersPath.pop();
-	}
+    public final void processMessage(PSTMessage email, Stack<String> foldersPath, final int filesource_id, int depth) throws PSTException {
+        Worker worker = new Worker(jaxbMarshaller,out,email, foldersPath, filesource_id, depth);
+        worker.run();
     }
-
     //// mime4j
     /*
     public final void mime4j(){

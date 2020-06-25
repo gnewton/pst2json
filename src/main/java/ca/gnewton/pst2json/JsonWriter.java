@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import java.io.IOException;
 import com.pff.*;
 import java.util.*;
-import java.text.SimpleDateFormat;
+
 import java.io.OutputStream;
 
 public class JsonWriter implements Writer{
@@ -40,62 +40,14 @@ public class JsonWriter implements Writer{
 
 
 
-    int depth = 0;
-    public void process(String filename, int filesource_id) //throws Exception;
-    //public final void process(PSTFolder folder,Stack<String>foldersPath, int filesource_id)
-	throws PSTException, java.io.IOException
-    {
-        PSTFile pstFile = Util.openPSTFile(filename);
-        Stack<String> foldersPath = new Stack<String>();
-        this.processPST(pstFile.getRootFolder(), foldersPath, filesource_id);
-    }
-    
-    public final void processPST(PSTFolder folder,Stack<String>foldersPath, int filesource_id)
-	throws PSTException, java.io.IOException
-    {
-	String folderName = folder.getDisplayName();
-	if (folderName != null && folderName.length() >0){
-	    foldersPath.push(folder.getDisplayName());
-	    ++depth;
-	}
-	    
-        // go through the folders...
-        if (folder.hasSubfolders()) {
-            Vector<PSTFolder> childFolders = folder.getSubFolders();
-            for (PSTFolder childFolder : childFolders) {
-                this.processPST(childFolder, foldersPath,filesource_id);
-            }
-        }
 
-        // and now the emails for this folder
-        if (folder.getContentCount() > 0) {
-	    
-            PSTMessage email = (PSTMessage)folder.getNextChild();
-            while (email != null) {
-                //printDepth();
-                //System.out.println("Email: "+email.getSubject() + "|| " + email.getMessageDeliveryTime());
-		try{
-		    print(email, gen, foldersPath, depth);
-		}catch(PSTException  e){
-		    throw new IOException();
-		}
-                email = (PSTMessage)folder.getNextChild();
-            }
-        }
 
-	if (folderName != null && folderName.length() >0){
-	    --depth;
-	    foldersPath.pop();
-	}
-    }
-    final SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-
-    public final void print(PSTMessage email, JsonGenerator gen, Stack<String> foldersPath, int depth) throws PSTException {
+    public final void processMessage(PSTMessage email, Stack<String> foldersPath, final int filesource_id, int depth) throws PSTException {
 
 	Date rec = email.getMessageDeliveryTime();
 	String receivedTime="";
 	if (rec != null){
-	    receivedTime  = dateFormat.format(rec);
+	    receivedTime  = Util.dateFormat.format(rec);
 	}
 	try{
 

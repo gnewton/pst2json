@@ -3,7 +3,7 @@
 	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>ca.gnewton.</groupId>
+  <groupId>ca.gnewton</groupId>
   <artifactId>pst2json</artifactId>
   <version>0.1</version>
   <packaging>jar</packaging>
@@ -17,8 +17,8 @@
   
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.6</maven.compiler.source>
-    <maven.compiler.target>1.6</maven.compiler.target>
+    <maven.compiler.source>14</maven.compiler.source>
+    <maven.compiler.target>14</maven.compiler.target>
      <compilerArgument>-Xlint:unchecked</compilerArgument>
   </properties>
 
@@ -94,7 +94,7 @@
     <dependency>
       <groupId>com.pff</groupId>
       <artifactId>java-libpst</artifactId>
-      <version>0.9.3</version>
+      <version>0.9.5-SNAPSHOT</version>
     </dependency>
 
 

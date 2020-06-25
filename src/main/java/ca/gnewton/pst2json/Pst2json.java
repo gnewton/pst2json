@@ -128,7 +128,7 @@ public class Pst2json {
             //}
             
             try {
-                writer.process(filename, i);
+                process(writer, filename, i);
             } catch (Exception err) {
                 err.printStackTrace();
                 return;
@@ -156,5 +156,61 @@ public class Pst2json {
 	}
     }
 
+
+    int depth = 0;
+    public void process(Writer w, String filename, int filesource_id) throws Exception{
+        System.err.println("Opening PST file: " + filename + "  " + filesource_id);
+        
+        PSTFile pstFile = Util.openPSTFile(filename);
+        
+        Stack<String> foldersPath = new Stack<String>();
+        processX(w, pstFile.getRootFolder(), foldersPath, filesource_id);
+    }
+
+        public final void processX(Writer w, PSTFolder folder,Stack<String>foldersPath, int filesource_id)
+	throws PSTException, java.io.IOException
+                {
+
+        String folderName = folder.getDisplayName();
+	if (folderName != null && folderName.length() >0){
+	    foldersPath.push(folder.getDisplayName());
+	    ++depth;
+	}
+	    
+        // go through the folders...
+        if (folder.hasSubfolders()) {
+            Vector<PSTFolder> childFolders = folder.getSubFolders();
+            for (PSTFolder childFolder : childFolders) {
+                processX(w, childFolder, foldersPath,filesource_id);
+            }
+        }
+
+        // and now the emails for this folder
+        if (folder.getContentCount() > 0) {
+	    
+            PSTMessage email = (PSTMessage)folder.getNextChild();
+            while (email != null) {
+                //printDepth();
+                //System.out.println("Email: "+email.getSubject() + "|| " + email.getMessageDeliveryTime());
+		try{
+		    w.processMessage(email, foldersPath, filesource_id, depth);
+		}catch(PSTException  e){
+		    throw new IOException();
+		}
+                try{
+                    email = (PSTMessage)folder.getNextChild();
+                }catch(Throwable t){
+                    t.printStackTrace();
+                    break;
+                }
+            }
+        }
+
+	if (folderName != null && folderName.length() >0){
+	    --depth;
+	    foldersPath.pop();
+	}
+    }
 }
+    
 

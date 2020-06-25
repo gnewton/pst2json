@@ -4,6 +4,7 @@ import com.pff.PSTFile;
 import com.pff.PSTException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 
 public class Util{
 
@@ -12,6 +13,6 @@ public class Util{
         return new PSTFile(filename);
         
     }
-
+    final static SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
 }
