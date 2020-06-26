@@ -39,7 +39,7 @@ public class Pst2json {
     }
     
     public final String[] handleOpts(String[] argv){
-	Getopt g = new Getopt("", argv, "+jzTBe");
+	Getopt g = new Getopt("", argv, "+jzTBeF");
 	//
 	int c;
 	String arg;
@@ -49,6 +49,10 @@ public class Pst2json {
 		    {
 		    case 'j':
 			Config.output = Outputs.JSON;
+			break;
+
+                    case 'F':
+			Config.output = Outputs.FILESYSTEM;
 			break;
 
 		    case 'B':
@@ -102,6 +106,14 @@ public class Pst2json {
                 return;
             }
             break;
+        case FILESYSTEM:
+            try{
+                writer = new FilesystemWriter(out, filenames);
+            }catch (Exception err) {
+                err.printStackTrace();
+                return;
+            }
+            break;
         case JSON:
             try{
                 writer = new JsonWriter(out, Config.extractTextFromAttachments);
@@ -112,7 +124,13 @@ public class Pst2json {
             }
             break;
         }
-        
+
+        try{
+            writer.init(null);
+        }catch(Exception e){
+            e.printStackTrace();
+            return;
+        }
         
         int i;
         for(i=0; i<filenames.length; i++){
@@ -123,10 +141,6 @@ public class Pst2json {
             System.err.println(filenames.length);
             System.err.flush();
 
-            //if (true){
-            //return;
-            //}
-            
             try {
                 process(writer, filename, i);
             } catch (Exception err) {
@@ -159,17 +173,20 @@ public class Pst2json {
 
     int depth = 0;
     public void process(Writer w, String filename, int filesource_id) throws Exception{
+        Set<String> msgClasses = new HashSet<String>();
+        
         System.err.println("Opening PST file: " + filename + "  " + filesource_id);
         
         PSTFile pstFile = Util.openPSTFile(filename);
         
         Stack<String> foldersPath = new Stack<String>();
-        processX(w, pstFile.getRootFolder(), foldersPath, filesource_id);
+        processX(msgClasses, w, pstFile.getRootFolder(), foldersPath, filesource_id);
+
+        System.err.println(msgClasses);
     }
 
-        public final void processX(Writer w, PSTFolder folder,Stack<String>foldersPath, int filesource_id)
-	throws PSTException, java.io.IOException
-                {
+    public final void processX(Set<String> msgClasses, Writer w, PSTFolder folder,Stack<String>foldersPath, int filesource_id)
+	throws PSTException, java.io.IOException{
 
         String folderName = folder.getDisplayName();
 	if (folderName != null && folderName.length() >0){
@@ -181,7 +198,8 @@ public class Pst2json {
         if (folder.hasSubfolders()) {
             Vector<PSTFolder> childFolders = folder.getSubFolders();
             for (PSTFolder childFolder : childFolders) {
-                processX(w, childFolder, foldersPath,filesource_id);
+
+                processX(msgClasses, w, childFolder, foldersPath,filesource_id);
             }
         }
 
@@ -192,6 +210,7 @@ public class Pst2json {
             while (email != null) {
                 //printDepth();
                 //System.out.println("Email: "+email.getSubject() + "|| " + email.getMessageDeliveryTime());
+                msgClasses.add(email.getMessageClass());
 		try{
 		    w.processMessage(email, foldersPath, filesource_id, depth);
 		}catch(PSTException  e){

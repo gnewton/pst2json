@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import java.io.IOException;
 import com.pff.*;
 import java.util.*;
+import java.util.Properties;
 
 import java.io.OutputStream;
 
@@ -12,6 +13,10 @@ public class JsonWriter implements Writer{
     private JsonGenerator gen;
     OutputStream out = null;
         boolean extractTextFromAttachments = false;
+
+    public void init(Properties p) throws Exception{
+        
+    }
     
     public JsonWriter(OutputStream out, final boolean extractTextFromAttachments) throws Exception{
 	this.out = out;
@@ -201,7 +206,7 @@ public class JsonWriter implements Writer{
 	    }
 	    //--Attachments
 
-	    stringOut(gen,"body", email.getBodyPrefix());
+	    stringOut(gen,"body", email.getBody());
 	    
 	    gen.writeEndObject();
 	    

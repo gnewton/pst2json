@@ -2,8 +2,6 @@ package ca.gnewton.pst2json;
 
 import java.io.IOException;
 import com.pff.*;
-//import java.util.*;
-
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -22,6 +20,7 @@ import java.util.Vector;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Calendar;
+import java.util.Properties;
 
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +30,10 @@ public class XmlWriter implements Writer{
 
     private Marshaller jaxbMarshaller = null;
     OutputStream out = null;
+
+    public void init(Properties p) throws Exception{
+        
+    }
     
     public XmlWriter(OutputStream out, String []filenames) throws Exception{
 	this.out = out;
