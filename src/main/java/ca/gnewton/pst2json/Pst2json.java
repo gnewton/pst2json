@@ -2,7 +2,10 @@ package ca.gnewton.pst2json;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.pff.*;
+import com.pff.PSTFolder;
+import com.pff.PSTMessage;
+import com.pff.PSTException;
+import com.pff.PSTFile;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;

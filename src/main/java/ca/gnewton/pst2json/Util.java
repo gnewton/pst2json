@@ -1,5 +1,6 @@
 package ca.gnewton.pst2json;
 
+import java.text.Normalizer;
 import com.pff.PSTFile;
 import com.pff.PSTException;
 import java.io.FileNotFoundException;
@@ -49,9 +50,20 @@ public class Util{
     return null;
 }
 
-    public static final String cleanId(String id){
-        id = id.replaceAll("@", "_at_");
+    public final static String cleanId(String id){
+        id = cleanString(id);
         id = id.replaceAll("<", "");
         return id.replaceAll(">", "");
     }
+
+        public final static String cleanString(String s){
+        s =  Normalizer
+            .normalize(s, Normalizer.Form.NFD)
+            .replaceAll("[^\\p{ASCII}]", "");
+        s = s.replaceAll("[()]", "");
+        s = s.replaceAll("[@]", "_at_");
+        s =s.replaceAll("[^a-zA-Z0-9@]", "_");
+        return s;
+    }
+
 }

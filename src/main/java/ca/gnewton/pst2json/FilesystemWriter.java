@@ -16,7 +16,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.text.SimpleDateFormat;
-import java.text.Normalizer;
+
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
@@ -65,7 +65,9 @@ public class FilesystemWriter implements Writer{
         System.err.println(email.getInternetArticleNumber());
         Date deliveryTime = email.getMessageDeliveryTime();
         System.err.println(email.getMessageDeliveryTime());
-
+        if (deliveryTime == null){
+            return;
+        }
 
         System.err.println("FOLDER: " + email.getDisplayName());
         System.err.println("FOLDER: " + foldersPath.toString());
@@ -80,6 +82,10 @@ public class FilesystemWriter implements Writer{
             return;
         }
 
+        if (msgDir == null){
+            return;
+                }
+
         try{
             makeId(msgDir, email.getInternetMessageId());
         }catch(IOException e){
@@ -87,23 +93,14 @@ public class FilesystemWriter implements Writer{
         }
         
         System.err.println(email.getSenderName());
-        System.err.println(cleanString(email.getSenderName()));
+        System.err.println(Util.cleanString(email.getSenderName()));
         System.err.println(email.getSenderEmailAddress());
-        System.err.println(cleanString(email.getSenderEmailAddress()));
+        System.err.println(Util.cleanString(email.getSenderEmailAddress()));
     }
 
-    public final String cleanString(String s){
-        s =  Normalizer
-            .normalize(s, Normalizer.Form.NFD)
-            .replaceAll("[^\\p{ASCII}]", "");
-        s = s.replaceAll("[()]", "");
-        s = s.replaceAll("[@]", "_at_");
-        s =s.replaceAll("[^a-zA-Z0-9@]", "_");
-        return s;
-    }
 
     public final String makeChronological(PSTMessage email, Calendar cal, String folder) throws IOException{
-        String sender = cleanString(email.getSenderName());
+        String sender = Util.cleanString(email.getSenderName());
         System.err.println(email.getMessageClass());
         System.err.println("in_reply_to_id" + email.getInReplyToId());
         System.err.println("getInternetMessageId=" + email.getInternetMessageId());
@@ -124,9 +121,14 @@ public class FilesystemWriter implements Writer{
             + "."
             + Util.tenNumber(cal.get(Calendar.SECOND))
             //+  String.valueOf(email.getInternetArticleNumber())
-            + "__" + cleanString(email.getSubject())  + "___" + email.getMessageClass() + "---" + email.getClass().getSimpleName()
+            + "__" + Util.cleanString(email.getSubject())  + "___" + email.getMessageClass() + "---" + email.getClass().getSimpleName()
             + "__numAttach_" + String.valueOf(email.getNumberOfAttachments());
         System.err.println(msgDir);
+
+        File f = new File(msgDir);
+        if (f.exists()){
+            return null;
+        }
 
         makePath(msgDir);
 
